@@ -2,15 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Factory, 
-  Truck, 
-  ClipboardList, 
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Factory,
+  Truck,
+  ClipboardList,
   Settings,
-  Database
+  Database,
+  BookOpen
 } from 'lucide-react';
 
 const navItems = [
@@ -21,6 +22,7 @@ const navItems = [
   { name: '入荷管理', href: '/receiving', icon: Database },
   { name: '出荷管理', href: '/shipping', icon: Truck },
   { name: 'マスタ管理', href: '/masters', icon: Settings },
+  { name: 'マニュアル', href: '/manual', icon: BookOpen },
 ];
 
 export default function AppNav() {
@@ -38,20 +40,19 @@ export default function AppNav() {
             href={item.href}
             className={`
               group flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200
-              ${isActive 
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
+              ${isActive
+                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
                 : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
               }
             `}
           >
-            <Icon 
-              size={18} 
-              className={`transition-transform duration-300 group-hover:scale-110 ${
-                isActive ? 'text-emerald-400' : 'text-slate-600 group-hover:text-slate-300'
-              }`} 
+            <Icon
+              size={18}
+              className={`transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-emerald-400' : 'text-slate-600 group-hover:text-slate-300'
+                }`}
             />
             <span className="tracking-wide">{item.name}</span>
-            
+
             {isActive && (
               <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
             )}
