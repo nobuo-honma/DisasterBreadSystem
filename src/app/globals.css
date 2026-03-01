@@ -14,18 +14,48 @@
   body {
     color: rgb(var(--foreground-rgb));
     background: rgb(var(--background-start-rgb));
+    /* スマホでの不要なバウンスや余白を制御 */
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* 入力フォームのデフォルトスタイル調整（ダークテーマ用） */
+  /* モバイルでの入力フォーム・カレンダーの最適化 */
   input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(0.8) brightness(50%) sepia(100%) saturate(500%) hue-rotate(120deg);
     cursor: pointer;
+  }
+
+  /* スマホでのテキストサイズ自動調整を防止 */
+  html {
+    -webkit-text-size-adjust: 100%;
   }
 }
 
 @layer components {
 
-  /* カスタムスクロールバー（高精度なUI向け） */
+  /* --- スマホ向けUIコンポーネント --- */
+
+  /* タッチターゲットの最小サイズ確保 (アクセシビリティ対応) */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* モバイル用コンテナ（左右パディングの自動調整） */
+  .responsive-container {
+    @apply px-4 sm:px-6 md:px-8 max-w-7xl mx-auto w-full;
+  }
+
+  /* 横長テーブルのスマホ対応（親要素に付与） */
+  .mobile-table-wrapper {
+    @apply overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* --- カスタムスクロールバー (PC/スマホ併用) --- */
   .custom-scrollbar::-webkit-scrollbar {
     width: 5px;
     height: 5px;
@@ -42,12 +72,15 @@
     border-radius: 10px;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(16, 185, 129, 0.5);
-    /* emerald-500 */
+  /* ホバーはPCのみで有効化 */
+  @media (hover: hover) {
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(16, 185, 129, 0.5);
+      /* emerald-500 */
+    }
   }
 
-  /* 印刷用制御クラス */
+  /* --- 印刷用制御 --- */
   @media print {
     .no-print {
       display: none !important;
@@ -70,11 +103,11 @@
   }
 }
 
-/* アニメーション定義: ページ遷移時のフェードイン */
+/* アニメーション: モバイルでの負荷を考慮しシンプルな挙動 */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
 
   to {
@@ -84,11 +117,14 @@
 }
 
 .animate-page-entry {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
-/* テーブルヘッダーのブラー効果用 */
+/* テーブルヘッダーのブラー効果 (Safari対応) */
 .sticky-header-blur {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }

@@ -1,0 +1,24 @@
+{
+    /* 1. CSS/SCSSの標準リンターでTailwind独自のルールを無視する */
+    "css.lint.unknownAtRules": "ignore",
+    "scss.lint.unknownAtRules": "ignore",
+    /* 2. ファイルの関連付けをTailwind CSSに強制する（重要） */
+    "files.associations": {
+        "*.css": "tailwindcss"
+    },
+    /* 3. 言語識別子の設定（React/TypeScript環境への最適化） */
+    "tailwindCSS.includeLanguages": {
+        "typescript": "javascript",
+        "typescriptreact": "javascript",
+        "plaintext": "ts"
+    },
+    /* 4. インテリセンス（補完）の強化 */
+    "tailwindCSS.emmetCompletions": true,
+    "editor.quickSuggestions": {
+        "strings": "on"
+    },
+    /* 5. 保存時の自動修正設定（任意） */
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    }
+}
