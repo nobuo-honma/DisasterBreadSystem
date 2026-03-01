@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import {
     BookOpen, ChevronRight, ChevronDown, Info, AlertTriangle,
@@ -760,9 +761,18 @@ export default function ManualPage() {
                         <div className="w-7 h-7 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shrink-0 shadow-lg shadow-blue-900/40">
                             <BookOpen size={14} className="text-white" />
                         </div>
-                        <div>
-                            <h1 className="text-[13px] font-black text-white tracking-wide leading-none">操作マニュアル</h1>
-                            <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">DisasterBread System Ver.2</p>
+                        <div className="flex items-end">
+                            <div>
+                                <h1 className="text-[13px] font-black text-white tracking-wide leading-none">操作マニュアル</h1>
+                                <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5 text-center">DisasterBread System Ver.2</p>
+                            </div>
+                            <Link
+                                href="/dashboard"
+                                className="ml-4 text-[11px] font-bold text-slate-500 hover:text-blue-400 transition-colors flex items-center gap-1.5"
+                            >
+                                <LayoutDashboard size={12} />
+                                ダッシュボードに戻る
+                            </Link>
                         </div>
                     </div>
 
@@ -805,8 +815,8 @@ export default function ManualPage() {
                                         if (ch.sections.length > 0) navigateTo(ch.id, ch.sections[0].id);
                                     }}
                                     className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all ${activeChapter === ch.id
-                                            ? 'bg-slate-800 text-white'
-                                            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900'
+                                        ? 'bg-slate-800 text-white'
+                                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-900'
                                         }`}
                                 >
                                     <span className={`text-[10px] font-black font-mono ${ch.color} shrink-0`}>{ch.number}</span>
@@ -825,8 +835,8 @@ export default function ManualPage() {
                                                 key={sec.id}
                                                 onClick={() => navigateTo(ch.id, sec.id)}
                                                 className={`w-full text-left px-2 py-1.5 rounded text-[10px] transition-all truncate ${activeSection === sec.id
-                                                        ? `font-bold ${ch.color}`
-                                                        : 'text-slate-600 hover:text-slate-400'
+                                                    ? `font-bold ${ch.color}`
+                                                    : 'text-slate-600 hover:text-slate-400'
                                                     }`}
                                             >
                                                 {sec.title}
@@ -883,8 +893,8 @@ export default function ManualPage() {
                                         key={sec.id}
                                         onClick={() => { setActiveSection(sec.id); if (contentRef.current) contentRef.current.scrollTop = 0; }}
                                         className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${activeSection === sec.id
-                                                ? `bg-blue-600 text-white shadow`
-                                                : 'bg-slate-900 border border-slate-800 text-slate-500 hover:text-slate-300'
+                                            ? `bg-blue-600 text-white shadow`
+                                            : 'bg-slate-900 border border-slate-800 text-slate-500 hover:text-slate-300'
                                             }`}
                                     >
                                         {sec.title}
@@ -933,8 +943,8 @@ export default function ManualPage() {
                                     key={sec.id}
                                     onClick={() => { setActiveSection(sec.id); if (contentRef.current) contentRef.current.scrollTop = 0; }}
                                     className={`block w-full text-left text-[10px] py-1.5 px-2 rounded transition-colors ${activeSection === sec.id
-                                            ? `font-bold ${currentChapter.color}`
-                                            : 'text-slate-600 hover:text-slate-400'
+                                        ? `font-bold ${currentChapter.color}`
+                                        : 'text-slate-600 hover:text-slate-400'
                                         }`}
                                 >
                                     {sec.title}

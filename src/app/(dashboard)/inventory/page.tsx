@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import type { TItemStock, TProductStock } from '@/types/database';
+import { createClient } from '../../../lib/supabase/client';
+import type { TItemStock, TProductStock } from '../../../types/database';
 import {
   Search, AlertTriangle, CheckCircle2, X, Loader2, ClipboardList,
   Package, Layers, BarChart3, History, RefreshCw, Info,

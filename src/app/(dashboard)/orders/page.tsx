@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, useRef, useCallback, memo } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '../../../lib/supabase/client';
 import {
   Plus, Save, Trash2, Package,
   UtensilsCrossed, Search, ChevronDown, X, Info, AlertTriangle
@@ -174,19 +174,19 @@ const OrderDetailRow = memo(function OrderDetailRow({
 // メインコンポーネント
 // ============================================================
 export default function OrdersPage() {
-  const [destinations, setDestinations]       = useState<Destination[]>([]);
-  const [productsMaster, setProductsMaster]   = useState<Product[]>([]);
-  const [bomMaster, setBomMaster]             = useState<BomItem[]>([]);
-  const [itemsMaster, setItemsMaster]         = useState<Item[]>([]);
-  const [loading, setLoading]                 = useState(true);
-  const [fetchError, setFetchError]           = useState<string | null>(null);
-  const [isSaving, setIsSaving]               = useState(false);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [productsMaster, setProductsMaster] = useState<Product[]>([]);
+  const [bomMaster, setBomMaster] = useState<BomItem[]>([]);
+  const [itemsMaster, setItemsMaster] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [isDestOpen, setIsDestOpen] = useState(false);
   const [destSearch, setDestSearch] = useState('');
   const destRef = useRef<HTMLDivElement>(null);
 
-  const [orderHeader, setOrderHeader]   = useState<OrderHeader>(createInitialHeader);
+  const [orderHeader, setOrderHeader] = useState<OrderHeader>(createInitialHeader);
   const [orderDetails, setOrderDetails] = useState<OrderDetail[]>(() => [createEmptyDetail()]);
 
   // supabase インスタンスの取得
@@ -218,10 +218,10 @@ export default function OrdersPage() {
           return;
         }
 
-        setDestinations((resD.data as Destination[])  ?? []);
-        setProductsMaster((resP.data as Product[])    ?? []);
-        setBomMaster((resB.data as BomItem[])         ?? []);
-        setItemsMaster((resI.data as Item[])          ?? []);
+        setDestinations((resD.data as Destination[]) ?? []);
+        setProductsMaster((resP.data as Product[]) ?? []);
+        setBomMaster((resB.data as BomItem[]) ?? []);
+        setItemsMaster((resI.data as Item[]) ?? []);
       } catch (err) {
         setFetchError('予期しないエラーが発生しました。ページを再読み込みしてください。');
         console.error('[OrdersPage] init error:', err);

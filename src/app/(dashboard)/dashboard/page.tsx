@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import type { TItemStock, TMfgPlan, TStocktakingLog } from '@/types/database';
+import { BookOpen } from 'lucide-react';
+import { createClient } from '../../../lib/supabase/client';
+import type { TItemStock, TMfgPlan, TStocktakingLog } from '../../../types/database';
 
 export default function DashboardPage() {
   const [alerts, setAlerts] = useState<TItemStock[]>([]);
@@ -71,9 +73,18 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto p-6 space-y-8 text-slate-200">
       {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">ダッシュボード</h1>
-          <p className="text-slate-500 font-medium mt-1">Operational Overview & Critical Alerts</p>
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white">ダッシュボード</h1>
+            <p className="text-slate-500 font-medium mt-1">Operational Overview & Critical Alerts</p>
+          </div>
+          <Link
+            href="/manual"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-300 transition-all hover:text-white group"
+          >
+            <BookOpen size={14} className="text-slate-500 group-hover:text-blue-400 transition-colors" />
+            操作マニュアルを表示
+          </Link>
         </div>
         <div className="text-right">
           <div className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">System Status</div>

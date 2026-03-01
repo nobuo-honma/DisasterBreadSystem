@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '../../../../lib/supabase/client';
 import { Package, Plus, Save, Edit3, ShieldCheck } from 'lucide-react';
 // エラーに基づき TProduct から MProduct に修正
-import type { MProduct } from '@/types/database'; 
+import type { MProduct } from '@/types/database';
 
 export default function ProductsMasterPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -34,8 +34,8 @@ export default function ProductsMasterPage() {
     setLoading(false);
   };
 
-  useEffect(() => { 
-    fetchProducts(); 
+  useEffect(() => {
+    fetchProducts();
   }, [supabase]);
 
   // 保存処理
@@ -48,7 +48,7 @@ export default function ProductsMasterPage() {
     } else {
       await supabase.from('m_products').insert([formData]);
     }
-    
+
     setEditingId(null);
     setFormData({ product_code: '', product_name: '', specification: '', unit_cs_to_p: 1, is_active: true });
     fetchProducts();
@@ -62,7 +62,7 @@ export default function ProductsMasterPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-      
+
       {/* HEADER */}
       <div className="flex justify-between items-end border-b border-slate-800 pb-8">
         <div>
@@ -75,58 +75,58 @@ export default function ProductsMasterPage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-12">
-        
+
         {/* 左側: 登録・編集フォーム */}
         <section className="lg:col-span-4">
           <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 sticky top-8 shadow-2xl">
             <h2 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
               <Plus size={14} /> {editingId ? 'Edit Product' : 'Create New Product'}
             </h2>
-            
+
             <div className="space-y-5">
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-500 uppercase">製品コード</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={formData.product_code}
-                  onChange={(e) => setFormData({...formData, product_code: e.target.value})}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-white focus:border-emerald-500 outline-none transition-all font-mono" 
+                  onChange={(e) => setFormData({ ...formData, product_code: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-white focus:border-emerald-500 outline-none transition-all font-mono"
                   placeholder="EX: PRD-001"
                 />
               </div>
 
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-500 uppercase">製品名称</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={formData.product_name}
-                  onChange={(e) => setFormData({...formData, product_name: e.target.value})}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-white focus:border-emerald-500 outline-none transition-all" 
+                  onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-white focus:border-emerald-500 outline-none transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-500 uppercase">規格</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.specification}
-                    onChange={(e) => setFormData({...formData, specification: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500" 
+                    onChange={(e) => setFormData({ ...formData, specification: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-500 uppercase">入数 (P/CS)</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={formData.unit_cs_to_p}
-                    onChange={(e) => setFormData({...formData, unit_cs_to_p: Number(e.target.value)})}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white outline-none text-right font-mono focus:border-emerald-500" 
+                    onChange={(e) => setFormData({ ...formData, unit_cs_to_p: Number(e.target.value) })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white outline-none text-right font-mono focus:border-emerald-500"
                   />
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={handleSave}
                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2 mt-4"
               >
@@ -134,7 +134,7 @@ export default function ProductsMasterPage() {
               </button>
 
               {editingId && (
-                <button 
+                <button
                   onClick={() => { setEditingId(null); setFormData({ product_code: '', product_name: '', specification: '', unit_cs_to_p: 1, is_active: true }); }}
                   className="w-full border border-slate-800 text-slate-500 py-3 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-800 transition-all mt-2"
                 >
@@ -173,7 +173,7 @@ export default function ProductsMasterPage() {
                       <span className="ml-2 text-[9px] text-slate-500 font-black uppercase">pcs / cs</span>
                     </td>
                     <td className="py-6 px-6 text-center">
-                      <button 
+                      <button
                         onClick={() => { setEditingId(p.id); setFormData(p); }}
                         className="p-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600 transition-all"
                       >

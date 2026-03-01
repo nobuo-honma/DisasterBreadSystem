@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '../../../../lib/supabase/client';
 import { Box, Plus, Save, Edit3, Search, AlertCircle, Filter } from 'lucide-react';
 
 export default function ItemsMasterPage() {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link'; // For any links later
 
 const faqs = [
   {

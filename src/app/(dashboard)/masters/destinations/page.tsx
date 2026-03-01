@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '../../../../lib/supabase/client';
 import { Truck, Plus, Save, Edit3, Search, MapPin, Phone, User } from 'lucide-react';
 
 export default function DestinationsMasterPage() {
@@ -207,8 +207,8 @@ export default function DestinationsMasterPage() {
                                     <tr key={d.id} className="group hover:bg-slate-800/20 transition-all">
                                         <td className="py-6 px-6">
                                             <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${d.dest_type === '出荷先' ? 'border-blue-500/30 text-blue-400 bg-blue-500/5' :
-                                                    d.dest_type === '仕入先' ? 'border-orange-500/30 text-orange-400 bg-orange-500/5' :
-                                                        'border-slate-500/30 text-slate-400 bg-slate-500/5'
+                                                d.dest_type === '仕入先' ? 'border-orange-500/30 text-orange-400 bg-orange-500/5' :
+                                                    'border-slate-500/30 text-slate-400 bg-slate-500/5'
                                                 }`}>
                                                 {d.dest_type}
                                             </span>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '../../../../lib/supabase/client';
 import { Layers, Plus, Save, Trash2, Package, Box, ArrowRight } from 'lucide-react';
 
 export default function BOMMasterPage() {
@@ -101,8 +101,8 @@ export default function BOMMasterPage() {
                                     key={p.id}
                                     onClick={() => fetchBOM(p.id)}
                                     className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 group ${selectedProductId === p.id
-                                            ? 'bg-indigo-500/10 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.1)]'
-                                            : 'bg-slate-950/50 border-slate-800 hover:border-slate-600'
+                                        ? 'bg-indigo-500/10 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.1)]'
+                                        : 'bg-slate-950/50 border-slate-800 hover:border-slate-600'
                                         }`}
                                 >
                                     <div className="flex justify-between items-center">

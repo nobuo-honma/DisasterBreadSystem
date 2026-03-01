@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import type { TReceiving, MItem } from '@/types/database';
+import { createClient } from '../../../lib/supabase/client';
+import type { TReceiving, MItem } from '../../../types/database';
 import {
   Printer, RefreshCw, Plus, X, CheckCircle2, AlertTriangle,
   Truck, CalendarDays, List, Package, ChevronLeft, ChevronRight,
@@ -38,12 +38,12 @@ function useToast() {
 function ToastContainer({ toasts, onRemove }: { toasts: ToastMsg[]; onRemove: (id: number) => void }) {
   const styles: Record<ToastType, string> = {
     success: 'bg-emerald-950 border-emerald-700/60 text-emerald-300',
-    error:   'bg-rose-950   border-rose-700/60   text-rose-300',
+    error: 'bg-rose-950   border-rose-700/60   text-rose-300',
     warning: 'bg-amber-950  border-amber-700/60  text-amber-300',
   };
   const icons: Record<ToastType, React.ReactNode> = {
     success: <CheckCircle2 size={13} />,
-    error:   <AlertTriangle size={13} />,
+    error: <AlertTriangle size={13} />,
     warning: <AlertTriangle size={13} />,
   };
   return (
@@ -63,9 +63,9 @@ function ToastContainer({ toasts, onRemove }: { toasts: ToastMsg[]; onRemove: (i
 // ─── ステータスバッジ ──────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
   const cls =
-    status === '入荷済'   ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-    status === '一部入荷' ? 'bg-sky-500/10     border-sky-500/30     text-sky-400' :
-                            'bg-amber-500/10   border-amber-500/30   text-amber-400';
+    status === '入荷済' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
+      status === '一部入荷' ? 'bg-sky-500/10     border-sky-500/30     text-sky-400' :
+        'bg-amber-500/10   border-amber-500/30   text-amber-400';
   return (
     <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${cls}`}>
       {status}
@@ -75,25 +75,25 @@ function StatusBadge({ status }: { status: string }) {
 
 // ─── メインコンポーネント ─────────────────────────────────────────
 export default function ReceivingPage() {
-  const [viewMode, setViewMode]               = useState<ViewMode>('list');
-  const [items, setItems]                     = useState<MItem[]>([]);
-  const [list, setList]                       = useState<ReceivingRow[]>([]);
-  const [loading, setLoading]                 = useState(true);
-  const [submitting, setSubmitting]           = useState(false);
-  const [formOpen, setFormOpen]               = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [items, setItems] = useState<MItem[]>([]);
+  const [list, setList] = useState<ReceivingRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
 
   // フォーム
   const [selectedItemCode, setSelectedItemCode] = useState('');
-  const [scheduledDate, setScheduledDate]       = useState('');
-  const [orderQuantity, setOrderQuantity]       = useState('');
-  const [remarks, setRemarks]                   = useState('');
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [orderQuantity, setOrderQuantity] = useState('');
+  const [remarks, setRemarks] = useState('');
 
   // インライン受入入力: row.id -> 入力文字列
   const [recvInputs, setRecvInputs] = useState<Record<string, string>>({});
 
   // カレンダー月
   const today = useMemo(() => new Date(), []);
-  const [calYear, setCalYear]   = useState(today.getFullYear());
+  const [calYear, setCalYear] = useState(today.getFullYear());
   const [calMonth, setCalMonth] = useState(today.getMonth()); // 0-indexed
 
   const { toasts, add: addToast, remove: removeToast } = useToast();
@@ -112,7 +112,7 @@ export default function ReceivingPage() {
           .limit(200),
       ]);
       if (itemsRes.error) throw itemsRes.error;
-      if (listRes.error)  throw listRes.error;
+      if (listRes.error) throw listRes.error;
 
       const itemMap = new Map((itemsRes.data ?? []).map((i: MItem) => [i.item_code, i.item_name]));
       setItems(itemsRes.data ?? []);
@@ -153,12 +153,12 @@ export default function ReceivingPage() {
       const receivingCode = `INC-${datePart}-${String(seq).padStart(3, '0')}`;
 
       const { error } = await supabase.from('t_receiving').insert({
-        receiving_code:  receivingCode,
-        item_code:       selectedItemCode,
-        scheduled_date:  scheduledDate,
-        order_quantity:  Number(orderQuantity),
-        status:          '未入荷',
-        remarks:         remarks.trim(),
+        receiving_code: receivingCode,
+        item_code: selectedItemCode,
+        scheduled_date: scheduledDate,
+        order_quantity: Number(orderQuantity),
+        status: '未入荷',
+        remarks: remarks.trim(),
       });
       if (error) throw error;
 
@@ -192,8 +192,8 @@ export default function ReceivingPage() {
 
       const { error: recvErr } = await supabase.from('t_receiving').update({
         actual_quantity: actualQty,
-        status:          newStatus,
-        updated_at:      new Date().toISOString(),
+        status: newStatus,
+        updated_at: new Date().toISOString(),
       }).eq('id', row.id);
       if (recvErr) throw recvErr;
 
@@ -214,12 +214,12 @@ export default function ReceivingPage() {
 
       // 在庫ログ
       await supabase.from('t_stock_log').insert({
-        tx_type:      '入荷',
-        target_type:  '品目',
-        item_code:    row.item_code,
-        quantity:     actualQty,
+        tx_type: '入荷',
+        target_type: '品目',
+        item_code: row.item_code,
+        quantity: actualQty,
         related_code: row.receiving_code,
-        remarks:      `入荷受入: ${row.receiving_code}`,
+        remarks: `入荷受入: ${row.receiving_code}`,
       });
 
       addToast('success', `${row.receiving_code} の受入完了（${actualQty}）`);
@@ -233,10 +233,10 @@ export default function ReceivingPage() {
 
   // ─── カレンダー計算 ──────────────────────────────────────────
   const calendarDays = useMemo(() => {
-    const firstDow  = new Date(calYear, calMonth, 1).getDay();
-    const lastDate  = new Date(calYear, calMonth + 1, 0).getDate();
-    const prefix    = Array<null>(firstDow).fill(null);
-    const days      = Array.from({ length: lastDate }, (_, i) => {
+    const firstDow = new Date(calYear, calMonth, 1).getDay();
+    const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+    const prefix = Array<null>(firstDow).fill(null);
+    const days = Array.from({ length: lastDate }, (_, i) => {
       const d = i + 1;
       return `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     });
@@ -267,10 +267,10 @@ export default function ReceivingPage() {
 
   // ─── サマリ ──────────────────────────────────────────────────
   const summary = useMemo(() => ({
-    total:    list.length,
-    pending:  list.filter(r => r.status === '未入荷').length,
-    partial:  list.filter(r => r.status === '一部入荷').length,
-    done:     list.filter(r => r.status === '入荷済').length,
+    total: list.length,
+    pending: list.filter(r => r.status === '未入荷').length,
+    partial: list.filter(r => r.status === '一部入荷').length,
+    done: list.filter(r => r.status === '入荷済').length,
   }), [list]);
 
   // ─── レンダリング ────────────────────────────────────────────
@@ -341,10 +341,10 @@ export default function ReceivingPage() {
         {/* ── サマリカード ── */}
         <div className="grid grid-cols-4 gap-3 print:hidden">
           {([
-            { label: '全件',     count: summary.total,   cls: 'border-slate-700    text-slate-300' },
-            { label: '未入荷',   count: summary.pending,  cls: 'border-amber-800/50  text-amber-400' },
-            { label: '一部入荷', count: summary.partial,  cls: 'border-sky-800/50    text-sky-400' },
-            { label: '入荷済',   count: summary.done,     cls: 'border-emerald-800/50 text-emerald-400' },
+            { label: '全件', count: summary.total, cls: 'border-slate-700    text-slate-300' },
+            { label: '未入荷', count: summary.pending, cls: 'border-amber-800/50  text-amber-400' },
+            { label: '一部入荷', count: summary.partial, cls: 'border-sky-800/50    text-sky-400' },
+            { label: '入荷済', count: summary.done, cls: 'border-emerald-800/50 text-emerald-400' },
           ] as const).map(({ label, count, cls }) => (
             <div key={label} className={`rounded-xl border px-4 py-3 bg-slate-900/40 flex items-center justify-between ${cls}`}>
               <span className="text-[10px] font-black uppercase tracking-wider opacity-70">{label}</span>
@@ -461,15 +461,15 @@ export default function ReceivingPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-800/50 print:divide-gray-300">
                     {list.map(r => {
-                      const isPending  = r.status !== '入荷済';
-                      const inputVal   = recvInputs[r.id] ?? '';
+                      const isPending = r.status !== '入荷済';
+                      const inputVal = recvInputs[r.id] ?? '';
                       return (
                         <tr
                           key={r.id}
                           className={`transition-colors print:text-black
-                            ${r.status === '入荷済'   ? 'opacity-60 hover:opacity-80' :
+                            ${r.status === '入荷済' ? 'opacity-60 hover:opacity-80' :
                               r.status === '一部入荷' ? 'bg-sky-950/10 hover:bg-sky-950/20' :
-                              'hover:bg-slate-800/20'}`}
+                                'hover:bg-slate-800/20'}`}
                         >
                           <td className="py-3 px-4">
                             <span className="text-[11px] font-mono font-bold text-emerald-400 print:text-black">{r.receiving_code}</span>
@@ -569,7 +569,7 @@ export default function ReceivingPage() {
                 <div key={d} className={`text-center py-2 text-[10px] font-black tracking-widest
                   ${i === 0 ? 'text-rose-400 bg-rose-900/20 print:text-red-700 print:bg-red-50' :
                     i === 6 ? 'text-blue-400 bg-blue-900/20 print:text-blue-700 print:bg-blue-50' :
-                    'text-slate-500 bg-slate-900/60 print:text-black print:bg-gray-100'}
+                      'text-slate-500 bg-slate-900/60 print:text-black print:bg-gray-100'}
                 `}>{d}</div>
               ))}
             </div>
@@ -581,10 +581,10 @@ export default function ReceivingPage() {
                   <div key={`empty-${idx}`} className="min-h-[110px] bg-slate-950/30 print:bg-gray-50 print:border print:border-gray-200" />
                 );
 
-                const dow      = new Date(date).getDay();
-                const entries  = calendarMap[date] ?? [];
-                const isToday  = date === todayStr;
-                const isPast   = date < todayStr;
+                const dow = new Date(date).getDay();
+                const entries = calendarMap[date] ?? [];
+                const isToday = date === todayStr;
+                const isPast = date < todayStr;
                 const hasPending = entries.some(r => r.status !== '入荷済');
 
                 return (
@@ -594,8 +594,8 @@ export default function ReceivingPage() {
                       print:min-h-[100px] print:border-black print:border
                       ${dow === 0 ? 'bg-rose-950/10 border-rose-900/40 print:bg-red-50' :
                         dow === 6 ? 'bg-blue-950/10 border-blue-900/40 print:bg-blue-50' :
-                        isPast    ? 'bg-slate-950/60 border-slate-800/40 print:bg-gray-50' :
-                        'bg-slate-900/30 border-slate-800/60 print:bg-white'}
+                          isPast ? 'bg-slate-950/60 border-slate-800/40 print:bg-gray-50' :
+                            'bg-slate-900/30 border-slate-800/60 print:bg-white'}
                       ${isToday ? 'ring-1 ring-inset ring-emerald-500/50' : ''}
                     `}
                   >
@@ -604,9 +604,9 @@ export default function ReceivingPage() {
                       <span className={`text-[13px] font-black font-mono leading-none
                         ${isToday ? 'text-emerald-400 print:text-emerald-700' :
                           dow === 0 ? 'text-rose-500 print:text-red-600' :
-                          dow === 6 ? 'text-blue-500 print:text-blue-600' :
-                          isPast ? 'text-slate-600 print:text-gray-400' :
-                          'text-slate-300 print:text-black'}
+                            dow === 6 ? 'text-blue-500 print:text-blue-600' :
+                              isPast ? 'text-slate-600 print:text-gray-400' :
+                                'text-slate-300 print:text-black'}
                       `}>
                         {date.split('-')[2]}
                       </span>
@@ -627,10 +627,10 @@ export default function ReceivingPage() {
                             ${r.status === '入荷済'
                               ? 'border-emerald-800/50 bg-emerald-950/20 print:border-emerald-500'
                               : r.status === '一部入荷'
-                              ? 'border-sky-800/50     bg-sky-950/20     print:border-sky-500'
-                              : r.scheduled_date < todayStr
-                              ? 'border-rose-700/60   bg-rose-950/20   print:border-red-500'
-                              : 'border-amber-700/50  bg-amber-950/15  print:border-amber-500'
+                                ? 'border-sky-800/50     bg-sky-950/20     print:border-sky-500'
+                                : r.scheduled_date < todayStr
+                                  ? 'border-rose-700/60   bg-rose-950/20   print:border-red-500'
+                                  : 'border-amber-700/50  bg-amber-950/15  print:border-amber-500'
                             }`}
                         >
                           <p className="text-[9px] font-black leading-tight text-white truncate print:text-black">
@@ -644,9 +644,9 @@ export default function ReceivingPage() {
                               )}
                             </span>
                             <span className={`text-[7px] font-black print:hidden
-                              ${r.status === '入荷済'   ? 'text-emerald-400' :
-                                r.status === '一部入荷' ? 'text-sky-400'     :
-                                r.scheduled_date < todayStr ? 'text-rose-400' : 'text-amber-400'}
+                              ${r.status === '入荷済' ? 'text-emerald-400' :
+                                r.status === '一部入荷' ? 'text-sky-400' :
+                                  r.scheduled_date < todayStr ? 'text-rose-400' : 'text-amber-400'}
                             `}>
                               {r.status === '未入荷' && r.scheduled_date < todayStr ? '遅延' : r.status}
                             </span>

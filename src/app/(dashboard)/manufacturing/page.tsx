@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '../../../lib/supabase/client';
+import type { TMfgPlan, TItemStock, MBom } from '../../../types/database';
 import {
   CheckCircle2, Package, Truck, Trash2, Printer, Loader2,
   List, Gauge, MessageSquare, MapPin, Plus, AlertTriangle,
@@ -55,12 +56,12 @@ function Toast({ toasts, onRemove }: { toasts: ToastMsg[]; onRemove: (id: number
             flex items-center gap-3 px-4 py-3 rounded-md border text-[11px] font-bold
             shadow-2xl backdrop-blur-sm pointer-events-auto animate-slideIn
             ${t.type === 'success' ? 'bg-green-950 border-green-700 text-green-300' : ''}
-            ${t.type === 'error'   ? 'bg-red-950   border-red-700   text-red-300'  : ''}
-            ${t.type === 'warning' ? 'bg-amber-950 border-amber-700 text-amber-300': ''}
+            ${t.type === 'error' ? 'bg-red-950   border-red-700   text-red-300' : ''}
+            ${t.type === 'warning' ? 'bg-amber-950 border-amber-700 text-amber-300' : ''}
           `}
         >
           {t.type === 'success' && <CheckCircle2 size={14} />}
-          {t.type === 'error'   && <AlertTriangle size={14} />}
+          {t.type === 'error' && <AlertTriangle size={14} />}
           {t.type === 'warning' && <AlertTriangle size={14} />}
           <span>{t.message}</span>
           <button onClick={() => onRemove(t.id)} className="ml-2 opacity-60 hover:opacity-100"><X size={12} /></button>
@@ -73,9 +74,9 @@ function Toast({ toasts, onRemove }: { toasts: ToastMsg[]; onRemove: (id: number
 // ─── ステータスバッジ ──────────────────────────────────────────────
 function StatusBadge({ status }: { status: Plan['status'] }) {
   const map: Record<Plan['status'], string> = {
-    '計画':  'bg-slate-800 text-slate-400 border-slate-700',
-    '製造中':'bg-amber-950 text-amber-400 border-amber-800',
-    '完了':  'bg-green-950 text-green-400 border-green-800',
+    '計画': 'bg-slate-800 text-slate-400 border-slate-700',
+    '製造中': 'bg-amber-950 text-amber-400 border-amber-800',
+    '完了': 'bg-green-950 text-green-400 border-green-800',
   };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black border ${map[status]}`}>
@@ -86,18 +87,18 @@ function StatusBadge({ status }: { status: Plan['status'] }) {
 
 // ─── メインコンポーネント ─────────────────────────────────────────
 export default function ManufacturingPage() {
-  const [viewMode, setViewMode]       = useState<'editor' | 'calendar'>('editor');
-  const [orders, setOrders]           = useState<Order[]>([]);
-  const [products, setProducts]       = useState<Product[]>([]);
+  const [viewMode, setViewMode] = useState<'editor' | 'calendar'>('editor');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [loading, setLoading]         = useState(true);
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [plans, setPlans]             = useState<Plan[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   // カレンダー用：全受注の全計画 { order_code -> Plan[] }
-  const [allPlans, setAllPlans]       = useState<Record<string, Plan[]>>({});
-  const [toasts, setToasts]           = useState<ToastMsg[]>([]);
-  const [toastId, setToastId]         = useState(0);
+  const [allPlans, setAllPlans] = useState<Record<string, Plan[]>>({});
+  const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const [toastId, setToastId] = useState(0);
 
   const supabase = useMemo(() => createClient(), []);
   const today = new Date();
@@ -152,7 +153,7 @@ export default function ManufacturingPage() {
       }
     };
     initData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
   // ─── 受注選択時：計画ロード ────────────────────────────────────
@@ -454,10 +455,9 @@ export default function ManufacturingPage() {
                       </div>
                       <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all duration-700 ${
-                            metrics.remainingWeight <= 0 ? 'bg-green-500' :
+                          className={`h-full rounded-full transition-all duration-700 ${metrics.remainingWeight <= 0 ? 'bg-green-500' :
                             metrics.progress >= 80 ? 'bg-amber-500' : 'bg-orange-600'
-                          }`}
+                            }`}
                           style={{ width: `${metrics.progress}%` }}
                         />
                       </div>
@@ -469,10 +469,9 @@ export default function ManufacturingPage() {
                     {['日付', '重量 (kg)', 'CS換算', 'ステータス', '現場備考', ''].map((h, i) => (
                       <div
                         key={h}
-                        className={`text-[9px] font-black text-slate-600 uppercase tracking-wider ${
-                          i === 0 ? 'col-span-3' : i === 1 ? 'col-span-2' : i === 2 ? 'col-span-1' :
+                        className={`text-[9px] font-black text-slate-600 uppercase tracking-wider ${i === 0 ? 'col-span-3' : i === 1 ? 'col-span-2' : i === 2 ? 'col-span-1' :
                           i === 3 ? 'col-span-2' : i === 4 ? 'col-span-3' : 'col-span-1'
-                        }`}
+                          }`}
                       >
                         {h}
                       </div>
@@ -485,9 +484,9 @@ export default function ManufacturingPage() {
                       <div
                         key={i}
                         className={`grid grid-cols-12 gap-2 bg-slate-900 border rounded-md p-2.5 items-center transition-all
-                          ${p.status === '完了'   ? 'border-green-800/50 bg-green-950/20' :
+                          ${p.status === '完了' ? 'border-green-800/50 bg-green-950/20' :
                             p.status === '製造中' ? 'border-amber-800/50 bg-amber-950/20' :
-                            'border-slate-800 hover:border-slate-700'}`}
+                              'border-slate-800 hover:border-slate-700'}`}
                       >
                         <input
                           type="date"
@@ -587,7 +586,7 @@ export default function ManufacturingPage() {
                     className={`text-center py-2 text-[10px] font-black tracking-widest
                       ${i === 0 ? 'text-rose-400 bg-rose-900/30 print:text-red-700 print:bg-red-50' :
                         i === 6 ? 'text-blue-400 bg-blue-900/30 print:text-blue-700 print:bg-blue-50' :
-                        'text-slate-500 bg-slate-900 print:text-black print:bg-gray-100'
+                          'text-slate-500 bg-slate-900 print:text-black print:bg-gray-100'
                       }`}
                   >
                     {d}
@@ -610,7 +609,7 @@ export default function ManufacturingPage() {
                       className={`min-h-[120px] p-1.5 border border-slate-800/60 transition-colors print:min-h-[110px] print:border-black print:border
                         ${dow === 0 ? 'bg-rose-950/10 print:bg-red-50' :
                           dow === 6 ? 'bg-blue-950/10 print:bg-blue-50' :
-                          'bg-slate-950/40 print:bg-white'
+                            'bg-slate-950/40 print:bg-white'
                         }
                         ${isToday ? 'ring-1 ring-inset ring-orange-500/40' : ''}
                       `}
@@ -619,8 +618,8 @@ export default function ManufacturingPage() {
                         <span className={`text-[13px] font-black font-mono leading-none
                           ${isToday ? 'text-orange-400 print:text-orange-700' :
                             dow === 0 ? 'text-rose-600 print:text-red-500' :
-                            dow === 6 ? 'text-blue-600 print:text-blue-500' :
-                            'text-slate-500 print:text-black'
+                              dow === 6 ? 'text-blue-600 print:text-blue-500' :
+                                'text-slate-500 print:text-black'
                           }`}
                         >
                           {date.split('-')[2]}
@@ -644,8 +643,8 @@ export default function ManufacturingPage() {
                                 ${plan.status === '完了'
                                   ? 'border-green-700/60 border-l-green-500 bg-green-950/20 print:border-green-600'
                                   : plan.status === '製造中'
-                                  ? 'border-amber-700/60 border-l-amber-500 bg-amber-950/20 print:border-amber-600'
-                                  : 'border-slate-700/60 border-l-orange-500 bg-slate-900/60 print:border-gray-400'
+                                    ? 'border-amber-700/60 border-l-amber-500 bg-amber-950/20 print:border-amber-600'
+                                    : 'border-slate-700/60 border-l-orange-500 bg-slate-900/60 print:border-gray-400'
                                 }`}
                             >
                               <p className="text-[9px] font-black text-white leading-tight truncate print:text-black">

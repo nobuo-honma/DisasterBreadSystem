@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import type { TOrder, TProductStock } from '@/types/database';
+import { createClient } from '../../../lib/supabase/client';
+import type { TOrder, TProductStock } from '../../../types/database';
 
 export default function ShippingPage() {
   const [pendingOrders, setPendingOrders] = useState<TOrder[]>([]);
@@ -144,8 +144,8 @@ export default function ShippingPage() {
                   key={o.id}
                   onClick={() => setSelectedOrder(o)}
                   className={`group cursor-pointer rounded-xl border p-4 transition-all ${selectedOrder?.id === o.id
-                      ? 'bg-orange-600/20 border-orange-500/50 shadow-lg shadow-orange-900/20'
-                      : 'bg-slate-950/40 border-slate-800 hover:border-slate-600'
+                    ? 'bg-orange-600/20 border-orange-500/50 shadow-lg shadow-orange-900/20'
+                    : 'bg-slate-950/40 border-slate-800 hover:border-slate-600'
                     }`}
                 >
                   <div className="flex justify-between items-start">
