@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 226, 232, 240;
+  /* slate-200 */
+  --background-start-rgb: 2, 6, 23;
+  /* slate-950 */
+  --background-end-rgb: 2, 6, 23;
+}
+
+@layer base {
+  body {
+    color: rgb(var(--foreground-rgb));
+    background: rgb(var(--background-start-rgb));
+  }
+
+  /* 入力フォームのデフォルトスタイル調整（ダークテーマ用） */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8) brightness(50%) sepia(100%) saturate(500%) hue-rotate(120deg);
+    cursor: pointer;
+  }
+}
+
+@layer components {
+
+  /* カスタムスクロールバー（高精度なUI向け） */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.5);
+    /* slate-800 */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(71, 85, 105, 0.5);
+    /* slate-600 */
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.5);
+    /* emerald-500 */
+  }
+
+  /* 印刷用制御クラス */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+
+    body {
+      background: white !important;
+      color: black !important;
+    }
+
+    main {
+      padding: 0 !important;
+      margin: 0 !important;
+      background: transparent !important;
+    }
+
+    .print-only {
+      display: block !important;
+    }
+  }
+}
+
+/* アニメーション定義: ページ遷移時のフェードイン */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-entry {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* テーブルヘッダーのブラー効果用 */
+.sticky-header-blur {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
