@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { createClient } from '../../../lib/supabase/client';
-import type { TItemStock, TProductStock } from '../../../types/database';
+import { createClient } from '@/lib/supabase/client';
+import type { TItemStock, TProductStock } from '@/types/database';
 import {
   Search, AlertTriangle, CheckCircle2, X, Loader2, ClipboardList,
   Package, Layers, BarChart3, History, RefreshCw, Info,
@@ -173,6 +173,161 @@ function PlanDetailTooltip({ detail }: { detail: ItemStockRow['plan_detail'] }) 
             <span className="font-black font-mono text-sky-300">
               {detail.reduce((s, d) => s + d.amount_kg, 0).toFixed(3)}
             </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── モバイル用カードコンポーネント ─────────────────────
+function MobileItemCard({
+  item,
+  isStocktaking,
+  adjustmentValue,
+  onAdjustmentChange,
+}: {
+  item: ItemStockRow;
+  isStocktaking: boolean;
+  adjustmentValue: string;
+  onAdjustmentChange: (val: string) => void;
+}) {
+  const changed = adjustmentValue !== '' && Number(adjustmentValue) !== Number(item.actual_stock);
+  const diff = changed ? Number(adjustmentValue) - Number(item.actual_stock) : 0;
+
+  const previewActual = changed ? Number(adjustmentValue) : Number(item.actual_stock);
+  const previewAvail = previewActual - item.calc_planned_usage;
+  const previewStatus = calcStatus(previewActual, item.calc_planned_usage, Number(item.min_stock_level));
+
+  const displayStatus = isStocktaking && changed ? previewStatus : item.calc_status;
+  const displayAvail = isStocktaking && changed ? previewAvail : item.calc_available;
+
+  return (
+    <div className={`p-4 border-b border-slate-800/60 last:border-0 transition-colors ${changed ? 'bg-amber-950/10' : ''}`}>
+      <div className="flex justify-between items-start mb-3">
+        <div>
+          <h3 className="text-[13px] font-bold text-white">{item.item_name ?? item.item_code}</h3>
+          <p className="text-[10px] font-mono text-slate-500 mt-0.5">{item.item_code}</p>
+        </div>
+        <StockBadge status={displayStatus} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-3">
+        <div>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">現在庫</p>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-lg font-black font-mono ${changed ? 'text-amber-300' : 'text-slate-200'}`}>
+              {previewActual}
+            </span>
+            {changed && <DiffBadge diff={diff} />}
+          </div>
+          {changed && <div className="text-[9px] text-slate-600 line-through font-mono">元: {Number(item.actual_stock)}</div>}
+        </div>
+        <div>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">引当可能</p>
+          <span className={`text-lg font-black font-mono ${displayAvail < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+            {displayAvail.toFixed(2)}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between py-2 border-t border-slate-800/40">
+        <div className="flex items-center gap-1.5">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">計画使用</p>
+          <span className={`text-[11px] font-bold font-mono ${item.calc_planned_usage > 0 ? 'text-sky-400' : 'text-slate-600'}`}>
+            {item.calc_planned_usage > 0 ? item.calc_planned_usage.toFixed(2) : '—'}
+          </span>
+        </div>
+        {item.calc_planned_usage > 0 && <PlanDetailTooltip detail={item.plan_detail} />}
+      </div>
+
+      {isStocktaking && (
+        <div className="mt-3 pt-3 border-t border-slate-800">
+          <label className="block text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1.5">実在庫数 入力</label>
+          <input
+            type="number"
+            min={0}
+            placeholder={String(item.actual_stock)}
+            value={adjustmentValue}
+            onChange={(e) => onAdjustmentChange(e.target.value)}
+            className={`w-full bg-slate-950 border rounded-lg px-3 py-2 text-[12px] font-mono outline-none transition-colors ${changed ? 'border-amber-500 text-amber-300' : 'border-slate-700 text-white focus:border-amber-500'}`}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileProductCard({
+  product,
+  isStocktaking,
+  adjustment,
+  onAdjustmentChange,
+}: {
+  product: TProductStock & { product_name?: string };
+  isStocktaking: boolean;
+  adjustment?: { cs: string; p: string };
+  onAdjustmentChange: (val: { cs: string; p: string }) => void;
+}) {
+  const csChanged = adjustment?.cs !== '' && adjustment?.cs !== undefined && Number(adjustment.cs) !== Number(product.stock_cs);
+  const pChanged = adjustment?.p !== '' && adjustment?.p !== undefined && Number(adjustment.p) !== Number(product.stock_p);
+
+  return (
+    <div className={`p-4 border-b border-slate-800/60 last:border-0 transition-colors ${csChanged || pChanged ? 'bg-amber-950/10' : ''}`}>
+      <div className="flex justify-between items-start mb-3">
+        <div>
+          <h3 className="text-[13px] font-bold text-white">{product.product_name ?? product.product_code}</h3>
+          <p className="text-[10px] font-mono text-blue-400 font-bold mt-0.5">{product.mfg_lot}</p>
+        </div>
+        <div className="text-right text-[9px] font-mono text-slate-500">
+          賞味期限: {product.expiry_date ?? '---'}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-3">
+        <div>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">在庫 C/S</p>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-lg font-black font-mono ${csChanged ? 'text-amber-300' : 'text-slate-200'}`}>
+              {csChanged ? adjustment.cs : product.stock_cs}
+            </span>
+            {csChanged && <DiffBadge diff={Number(adjustment.cs) - Number(product.stock_cs)} />}
+          </div>
+        </div>
+        <div>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">在庫 P</p>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-lg font-black font-mono ${pChanged ? 'text-amber-300' : 'text-slate-200'}`}>
+              {pChanged ? adjustment.p : product.stock_p}
+            </span>
+            {pChanged && <DiffBadge diff={Number(adjustment.p) - Number(product.stock_p)} />}
+          </div>
+        </div>
+      </div>
+
+      {isStocktaking && (
+        <div className="mt-3 pt-3 border-t border-slate-800 grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1.5">実棚 C/S</label>
+            <input
+              type="number"
+              min={0}
+              placeholder={String(product.stock_cs)}
+              value={adjustment?.cs ?? ''}
+              onChange={(e) => onAdjustmentChange({ cs: e.target.value, p: adjustment?.p ?? '' })}
+              className={`w-full bg-slate-950 border rounded-lg px-3 py-2 text-[12px] font-mono outline-none transition-colors ${csChanged ? 'border-amber-500 text-amber-300' : 'border-slate-700 text-white focus:border-amber-500'}`}
+            />
+          </div>
+          <div>
+            <label className="block text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1.5">実棚 P</label>
+            <input
+              type="number"
+              min={0}
+              placeholder={String(product.stock_p)}
+              value={adjustment?.p ?? ''}
+              onChange={(e) => onAdjustmentChange({ cs: adjustment?.cs ?? '', p: e.target.value })}
+              className={`w-full bg-slate-950 border rounded-lg px-3 py-2 text-[12px] font-mono outline-none transition-colors ${pChanged ? 'border-amber-500 text-amber-300' : 'border-slate-700 text-white focus:border-amber-500'}`}
+            />
           </div>
         </div>
       )}
@@ -528,15 +683,15 @@ function InventoryContent() {
 
         {/* ── 在庫状態サマリ（アイテムのみ） ── */}
         {category !== '製品' && !loading && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {([
               { label: '欠品', count: statusSummary['欠品'], bg: 'border-rose-800/50  bg-rose-950/20  text-rose-400' },
               { label: '在庫低下', count: statusSummary['在庫低下'], bg: 'border-amber-800/50 bg-amber-950/20 text-amber-400' },
               { label: '適正', count: statusSummary['適正'], bg: 'border-slate-700    bg-slate-900/40 text-slate-400' },
             ] as const).map(({ label, count, bg }) => (
-              <div key={label} className={`rounded-xl border px-4 py-3 flex items-center justify-between ${bg}`}>
-                <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
-                <span className="text-2xl font-black font-mono">{count}</span>
+              <div key={label} className={`rounded-xl border px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between ${bg}`}>
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider">{label}</span>
+                <span className="text-xl sm:text-2xl font-black font-mono">{count}</span>
               </div>
             ))}
           </div>
@@ -612,7 +767,7 @@ function InventoryContent() {
           </div>
         </div>
 
-        {/* ── テーブル ── */}
+        {/* ── メインリスト ── */}
         <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
           {loading ? (
             <div className="py-24 flex flex-col items-center gap-3 text-slate-600">
@@ -620,199 +775,225 @@ function InventoryContent() {
               <p className="text-[11px] font-bold uppercase tracking-widest">Loading...</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            <>
+              {/* PC向けテーブル表示 */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
 
-                {/* ─── 製品テーブル ─── */}
-                {category === '製品' && (
-                  <>
-                    <thead>
-                      <tr className="bg-slate-800/40 border-b border-slate-800">
-                        {['Mfg Lot', '製品名', 'Stock C/S', 'Stock P', '賞味期限',
-                          ...(isStocktaking ? ['実棚 C/S', '実棚 P'] : [])].map(h => (
-                            <th key={h} className={`py-3 px-5 text-[9px] font-black uppercase tracking-widest ${isStocktaking && (h === '実棚 C/S' || h === '実棚 P') ? 'text-amber-500 bg-amber-500/5' : 'text-slate-500'}`}>{h}</th>
-                          ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60">
-                      {filteredProducts.map(s => {
-                        const adj = productAdjustments?.[s.mfg_lot];
-                        const csChanged = adj?.cs !== '' && adj?.cs !== undefined && Number(adj.cs) !== Number(s.stock_cs);
-                        const pChanged = adj?.p !== '' && adj?.p !== undefined && Number(adj.p) !== Number(s.stock_p);
-                        return (
-                          <tr key={s.id} className={`transition-colors ${csChanged || pChanged ? 'bg-amber-950/10' : 'hover:bg-slate-800/20'}`}>
-                            <td className="py-3 px-5 font-mono text-[11px] text-blue-400 font-bold">{s.mfg_lot}</td>
-                            <td className="py-3 px-5">
-                              <p className="text-[12px] font-bold text-white">{s.product_name ?? s.product_code}</p>
-                              <p className="text-[9px] font-mono text-slate-600">{s.product_code}</p>
-                            </td>
-                            <td className="py-3 px-5 font-black font-mono text-slate-200">{s.stock_cs}<span className="text-[9px] text-slate-500 ml-1">CS</span></td>
-                            <td className="py-3 px-5 font-black font-mono text-slate-200">{s.stock_p}<span className="text-[9px] text-slate-500 ml-1">P</span></td>
-                            <td className="py-3 px-5 font-mono text-[11px] text-slate-400">{s.expiry_date ?? <span className="text-slate-700">---</span>}</td>
-                            {isStocktaking && (
-                              <>
-                                <td className="py-3 px-5 bg-amber-500/5">
-                                  <div className="flex items-center gap-2">
-                                    <input type="number" min={0} placeholder={String(s.stock_cs)}
-                                      value={productAdjustments?.[s.mfg_lot]?.cs ?? ''}
-                                      onChange={e => setProductAdjustments(prev => ({ ...(prev ?? {}), [s.mfg_lot]: { cs: e.target.value, p: (prev?.[s.mfg_lot]?.p ?? '') } }))}
-                                      className={`w-24 bg-slate-950 border rounded px-2 py-1.5 text-[11px] font-mono text-right outline-none transition-colors ${csChanged ? 'border-amber-500 text-amber-300' : 'border-slate-700 text-white focus:border-amber-500'}`}
-                                    />
-                                    {csChanged && <DiffBadge diff={Number(adj?.cs ?? 0) - Number(s.stock_cs)} />}
-                                  </div>
-                                </td>
-                                <td className="py-3 px-5 bg-amber-500/5">
-                                  <div className="flex items-center gap-2">
-                                    <input type="number" min={0} placeholder={String(s.stock_p)}
-                                      value={productAdjustments?.[s.mfg_lot]?.p ?? ''}
-                                      onChange={e => setProductAdjustments(prev => ({ ...(prev ?? {}), [s.mfg_lot]: { cs: (prev?.[s.mfg_lot]?.cs ?? ''), p: e.target.value } }))}
-                                      className={`w-24 bg-slate-950 border rounded px-2 py-1.5 text-[11px] font-mono text-right outline-none transition-colors ${pChanged ? 'border-amber-500 text-amber-300' : 'border-slate-700 text-white focus:border-amber-500'}`}
-                                    />
-                                    {pChanged && <DiffBadge diff={Number(adj?.p ?? 0) - Number(s.stock_p)} />}
-                                  </div>
-                                </td>
-                              </>
-                            )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </>
-                )}
-
-                {/* ─── アイテムテーブル ─── */}
-                {category !== '製品' && (
-                  <>
-                    <thead>
-                      <tr className="bg-slate-800/40 border-b border-slate-800">
-                        <th className="py-3 px-5 text-[9px] font-black text-slate-500 uppercase tracking-widest">品目名 / コード</th>
-                        <th className="py-3 px-5 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">現在庫</th>
-                        <th className="py-3 px-5 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">
-                          <span className="inline-flex items-center justify-end gap-1">
-                            計画使用
-                            <span title="完了以外の製造計画 × BOM使用量から算出" className="text-sky-700 cursor-default">
-                              <Info size={9} />
-                            </span>
-                          </span>
-                        </th>
-                        <th className="py-3 px-5 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">引当可能</th>
-                        <th className="py-3 px-5 text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                          <span className="inline-flex items-center gap-1">
-                            ステータス
-                            <span title="欠品: 在庫 < 計画使用 / 在庫低下: 在庫 < 計画使用 + 最低在庫" className="text-slate-700 cursor-default">
-                              <Info size={9} />
-                            </span>
-                          </span>
-                        </th>
-                        {isStocktaking && (
-                          <th className="py-3 px-5 text-[9px] font-black text-amber-500 uppercase tracking-widest bg-amber-500/5">実在庫数</th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60">
-                      {filteredItems.map(s => {
-                        const adjVal = adjustments[s.item_code] ?? '';
-                        const changed = adjVal !== '' && Number(adjVal) !== Number(s.actual_stock);
-                        const diff = changed ? Number(adjVal) - Number(s.actual_stock) : 0;
-
-                        // 棚卸入力中は入力値でステータスをプレビュー
-                        const previewActual = changed ? Number(adjVal) : Number(s.actual_stock);
-                        const previewAvail = previewActual - s.calc_planned_usage;
-                        const previewStatus = calcStatus(previewActual, s.calc_planned_usage, Number(s.min_stock_level));
-                        const statusChanged = isStocktaking && changed && previewStatus !== s.calc_status;
-
-                        const displayStatus = isStocktaking && changed ? previewStatus : s.calc_status;
-                        const displayAvail = isStocktaking && changed ? previewAvail : s.calc_available;
-
-                        return (
-                          <tr
-                            key={s.id}
-                            className={`transition-colors ${changed ? 'bg-amber-950/10' :
-                              s.calc_status === '欠品' ? 'bg-rose-950/5 hover:bg-rose-950/10' :
-                                s.calc_status === '在庫低下' ? 'bg-amber-950/5 hover:bg-amber-950/10' :
-                                  'hover:bg-slate-800/20'}`}
-                          >
-                            {/* 品目名 */}
-                            <td className="py-3 px-5">
-                              <p className="text-[12px] font-bold text-white">{s.item_name ?? s.item_code}</p>
-                              <p className="text-[9px] font-mono text-slate-600 mt-0.5">{s.item_code}</p>
-                            </td>
-
-                            {/* 現在庫（棚卸入力中はプレビュー） */}
-                            <td className="py-3 px-5 text-right">
-                              <span className={`font-black font-mono text-[13px] ${changed ? 'text-amber-300' : 'text-slate-200'}`}>
-                                {changed ? Number(adjVal) : Number(s.actual_stock)}
-                              </span>
-                              {changed && (
-                                <div className="text-[9px] text-slate-600 line-through font-mono">{Number(s.actual_stock)}</div>
-                              )}
-                            </td>
-
-                            {/* 計画使用（製造計画 × BOM 由来） */}
-                            <td className="py-3 px-5 text-right">
-                              <span className={`font-mono text-[13px] font-bold ${s.calc_planned_usage > 0 ? 'text-sky-400' : 'text-slate-700'}`}>
-                                {s.calc_planned_usage > 0 ? s.calc_planned_usage.toFixed(3) : '—'}
-                              </span>
-                              {s.calc_planned_usage > 0 && (
-                                <div className="mt-0.5 flex justify-end">
-                                  <PlanDetailTooltip detail={s.plan_detail} />
-                                </div>
-                              )}
-                            </td>
-
-                            {/* 引当可能 */}
-                            <td className="py-3 px-5 text-right">
-                              <span className={`font-black font-mono text-[13px] ${displayAvail < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                {displayAvail.toFixed(3)}
-                              </span>
-                            </td>
-
-                            {/* ステータス */}
-                            <td className="py-3 px-5">
-                              <StockBadge status={displayStatus} />
-                              {statusChanged && (
-                                <div className="mt-1 opacity-50">
-                                  <StockBadge status={s.calc_status} />
-                                </div>
-                              )}
-                            </td>
-
-                            {/* 棚卸入力列 */}
-                            {isStocktaking && (
-                              <td className="py-3 px-5 bg-amber-500/5">
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="number" min={0}
-                                    placeholder={String(s.actual_stock)}
-                                    value={adjVal}
-                                    onChange={e => setAdjustments(prev => ({ ...prev, [s.item_code]: e.target.value }))}
-                                    className={`w-28 bg-slate-950 border rounded px-3 py-1.5 text-[12px] font-mono text-right outline-none transition-colors ${changed ? 'border-amber-500 text-amber-300' : 'border-slate-700 text-white focus:border-amber-500'}`}
-                                  />
-                                  {changed && <DiffBadge diff={diff} />}
-                                </div>
+                  {/* ─── 製品テーブル ─── */}
+                  {category === '製品' && (
+                    <>
+                      <thead>
+                        <tr className="bg-slate-800/40 border-b border-slate-800">
+                          {['Mfg Lot', '製品名', 'Stock C/S', 'Stock P', '賞味期限',
+                            ...(isStocktaking ? ['実棚 C/S', '実棚 P'] : [])].map(h => (
+                              <th key={h} className={`py-3 px-5 text-[9px] font-black uppercase tracking-widest ${isStocktaking && (h === '実棚 C/S' || h === '実棚 P') ? 'text-amber-500 bg-amber-500/5' : 'text-slate-500'}`}>{h}</th>
+                            ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60">
+                        {filteredProducts.map(s => {
+                          const adj = productAdjustments?.[s.mfg_lot];
+                          const csChanged = adj?.cs !== '' && adj?.cs !== undefined && Number(adj.cs) !== Number(s.stock_cs);
+                          const pChanged = adj?.p !== '' && adj?.p !== undefined && Number(adj.p) !== Number(s.stock_p);
+                          return (
+                            <tr key={s.id} className={`transition-colors ${csChanged || pChanged ? 'bg-amber-950/10' : 'hover:bg-slate-800/20'}`}>
+                              <td className="py-3 px-5 font-mono text-[11px] text-blue-400 font-bold">{s.mfg_lot}</td>
+                              <td className="py-3 px-5">
+                                <p className="text-[12px] font-bold text-white">{s.product_name ?? s.product_code}</p>
+                                <p className="text-[9px] font-mono text-slate-600">{s.product_code}</p>
                               </td>
-                            )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </>
+                              <td className="py-3 px-5 font-black font-mono text-slate-200">{s.stock_cs}<span className="text-[9px] text-slate-500 ml-1">CS</span></td>
+                              <td className="py-3 px-5 font-black font-mono text-slate-200">{s.stock_p}<span className="text-[9px] text-slate-500 ml-1">P</span></td>
+                              <td className="py-3 px-5 font-mono text-[11px] text-slate-400">{s.expiry_date ?? <span className="text-slate-700">---</span>}</td>
+                              {isStocktaking && (
+                                <>
+                                  <td className="py-3 px-5 bg-amber-500/5">
+                                    <div className="flex items-center gap-2">
+                                      <input type="number" min={0} placeholder={String(s.stock_cs)}
+                                        value={productAdjustments?.[s.mfg_lot]?.cs ?? ''}
+                                        onChange={e => setProductAdjustments(prev => ({ ...(prev ?? {}), [s.mfg_lot]: { cs: e.target.value, p: (prev?.[s.mfg_lot]?.p ?? '') } }))}
+                                        className={`w-24 bg-slate-950 border rounded px-2 py-1.5 text-[11px] font-mono text-right outline-none transition-colors ${csChanged ? 'border-amber-500 text-amber-300' : 'border-slate-700 text-white focus:border-amber-500'}`}
+                                      />
+                                      {csChanged && <DiffBadge diff={Number(adj?.cs ?? 0) - Number(s.stock_cs)} />}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-5 bg-amber-500/5">
+                                    <div className="flex items-center gap-2">
+                                      <input type="number" min={0} placeholder={String(s.stock_p)}
+                                        value={productAdjustments?.[s.mfg_lot]?.p ?? ''}
+                                        onChange={e => setProductAdjustments(prev => ({ ...(prev ?? {}), [s.mfg_lot]: { cs: (prev?.[s.mfg_lot]?.cs ?? ''), p: e.target.value } }))}
+                                        className={`w-24 bg-slate-950 border rounded px-2 py-1.5 text-[11px] font-mono text-right outline-none transition-colors ${pChanged ? 'border-amber-500 text-amber-300' : 'border-slate-700 text-white focus:border-amber-500'}`}
+                                      />
+                                      {pChanged && <DiffBadge diff={Number(adj?.p ?? 0) - Number(s.stock_p)} />}
+                                    </div>
+                                  </td>
+                                </>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </>
+                  )}
+
+                  {/* ─── アイテムテーブル ─── */}
+                  {category !== '製品' && (
+                    <>
+                      <thead>
+                        <tr className="bg-slate-800/40 border-b border-slate-800">
+                          <th className="py-3 px-5 text-[9px] font-black text-slate-500 uppercase tracking-widest">品目名 / コード</th>
+                          <th className="py-3 px-5 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">現在庫</th>
+                          <th className="py-3 px-5 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">
+                            <span className="inline-flex items-center justify-end gap-1">
+                              計画使用
+                              <span title="完了以外の製造計画 × BOM使用量から算出" className="text-sky-700 cursor-default">
+                                <Info size={9} />
+                              </span>
+                            </span>
+                          </th>
+                          <th className="py-3 px-5 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">引当可能</th>
+                          <th className="py-3 px-5 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                            <span className="inline-flex items-center gap-1">
+                              ステータス
+                              <span title="欠品: 在庫 < 計画使用 / 在庫低下: 在庫 < 計画使用 + 最低在庫" className="text-slate-700 cursor-default">
+                                <Info size={9} />
+                              </span>
+                            </span>
+                          </th>
+                          {isStocktaking && (
+                            <th className="py-3 px-5 text-[9px] font-black text-amber-500 uppercase tracking-widest bg-amber-500/5">実在庫数</th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60">
+                        {filteredItems.map(s => {
+                          const adjVal = adjustments[s.item_code] ?? '';
+                          const changed = adjVal !== '' && Number(adjVal) !== Number(s.actual_stock);
+                          const diff = changed ? Number(adjVal) - Number(s.actual_stock) : 0;
+
+                          // 棚卸入力中は入力値でステータスをプレビュー
+                          const previewActual = changed ? Number(adjVal) : Number(s.actual_stock);
+                          const previewAvail = previewActual - s.calc_planned_usage;
+                          const previewStatus = calcStatus(previewActual, s.calc_planned_usage, Number(s.min_stock_level));
+                          const statusChanged = isStocktaking && changed && previewStatus !== s.calc_status;
+
+                          const displayStatus = isStocktaking && changed ? previewStatus : s.calc_status;
+                          const displayAvail = isStocktaking && changed ? previewAvail : s.calc_available;
+
+                          return (
+                            <tr
+                              key={s.id}
+                              className={`transition-colors ${changed ? 'bg-amber-950/10' :
+                                s.calc_status === '欠品' ? 'bg-rose-950/5 hover:bg-rose-950/10' :
+                                  s.calc_status === '在庫低下' ? 'bg-amber-950/5 hover:bg-amber-950/10' :
+                                    'hover:bg-slate-800/20'}`}
+                            >
+                              {/* 品目名 */}
+                              <td className="py-3 px-5">
+                                <p className="text-[12px] font-bold text-white">{s.item_name ?? s.item_code}</p>
+                                <p className="text-[9px] font-mono text-slate-600 mt-0.5">{s.item_code}</p>
+                              </td>
+
+                              {/* 現在庫（棚卸入力中はプレビュー） */}
+                              <td className="py-3 px-5 text-right">
+                                <span className={`font-black font-mono text-[13px] ${changed ? 'text-amber-300' : 'text-slate-200'}`}>
+                                  {changed ? Number(adjVal) : Number(s.actual_stock)}
+                                </span>
+                                {changed && (
+                                  <div className="text-[9px] text-slate-600 line-through font-mono">{Number(s.actual_stock)}</div>
+                                )}
+                              </td>
+
+                              {/* 計画使用（製造計画 × BOM 由来） */}
+                              <td className="py-3 px-5 text-right">
+                                <span className={`font-mono text-[13px] font-bold ${s.calc_planned_usage > 0 ? 'text-sky-400' : 'text-slate-700'}`}>
+                                  {s.calc_planned_usage > 0 ? s.calc_planned_usage.toFixed(3) : '—'}
+                                </span>
+                                {s.calc_planned_usage > 0 && (
+                                  <div className="mt-0.5 flex justify-end">
+                                    <PlanDetailTooltip detail={s.plan_detail} />
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* 引当可能 */}
+                              <td className="py-3 px-5 text-right">
+                                <span className={`font-black font-mono text-[13px] ${displayAvail < 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                  {displayAvail.toFixed(3)}
+                                </span>
+                              </td>
+
+                              {/* ステータス */}
+                              <td className="py-3 px-5">
+                                <StockBadge status={displayStatus} />
+                                {statusChanged && (
+                                  <div className="mt-1 opacity-50">
+                                    <StockBadge status={s.calc_status} />
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* 棚卸入力列 */}
+                              {isStocktaking && (
+                                <td className="py-3 px-5 bg-amber-500/5">
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="number" min={0}
+                                      placeholder={String(s.actual_stock)}
+                                      value={adjVal}
+                                      onChange={e => setAdjustments(prev => ({ ...prev, [s.item_code]: e.target.value }))}
+                                      className={`w-28 bg-slate-950 border rounded px-3 py-1.5 text-[12px] font-mono text-right outline-none transition-colors ${changed ? 'border-amber-500 text-amber-300' : 'border-slate-700 text-white focus:border-amber-500'}`}
+                                    />
+                                    {changed && <DiffBadge diff={diff} />}
+                                  </div>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </>
+                  )}
+                </table>
+              </div>
+
+              {/* モバイル向けカード表示 */}
+              <div className="md:hidden divide-y divide-slate-800/60">
+                {category === '製品' ? (
+                  filteredProducts.map(s => (
+                    <MobileProductCard
+                      key={s.id}
+                      product={s}
+                      isStocktaking={isStocktaking}
+                      adjustment={productAdjustments?.[s.mfg_lot]}
+                      onAdjustmentChange={val => setProductAdjustments(prev => ({ ...(prev ?? {}), [s.mfg_lot]: val }))}
+                    />
+                  ))
+                ) : (
+                  filteredItems.map(s => (
+                    <MobileItemCard
+                      key={s.id}
+                      item={s}
+                      isStocktaking={isStocktaking}
+                      adjustmentValue={adjustments[s.item_code] ?? ''}
+                      onAdjustmentChange={val => setAdjustments(prev => ({ ...prev, [s.item_code]: val }))}
+                    />
+                  ))
                 )}
-              </table>
-            </div>
+                {(category === '製品' ? filteredProducts : filteredItems).length === 0 && (
+                  <div className="py-24 flex flex-col items-center gap-3 text-slate-700">
+                    <Package size={36} className="opacity-20" />
+                    <p className="text-[11px] font-bold uppercase tracking-widest">該当データがありません</p>
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
-          {/* 空ステート */}
-          {!loading && ((category !== '製品' && filteredItems.length === 0) || (category === '製品' && filteredProducts.length === 0)) && (
-            <div className="py-20 flex flex-col items-center gap-3 text-slate-700">
-              <Package size={36} className="opacity-20" />
-              <p className="text-[11px] font-bold uppercase tracking-widest">該当する在庫データが見つかりません</p>
-            </div>
-          )}
-
-          {/* 棚卸フッター */}
+          {/* PC向け棚卸フッター */}
           {isStocktaking && totalChanged > 0 && (
-            <div className="px-5 py-4 bg-slate-800/40 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="hidden md:flex px-5 py-4 bg-slate-800/40 border-t border-slate-800 items-center justify-between gap-3">
               <p className="text-[11px] text-slate-400 font-bold">
                 <span className="text-amber-400 font-black">{totalChanged}</span> 品目に変更があります
               </p>
@@ -837,21 +1018,46 @@ function InventoryContent() {
             </div>
           )}
         </div>
+
+        {/* モバイル向け棚卸確定ボタン（フローティング） */}
+        {isStocktaking && totalChanged > 0 && (
+          <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-xs px-4">
+            <button
+              onClick={() => setConfirmOpen(true)}
+              disabled={saving}
+              className="w-full bg-amber-600 hover:bg-amber-500 text-white font-black py-4 rounded-2xl shadow-[0_8px_30px_rgb(217,119,6,0.3)] flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <ClipboardList size={16} />}
+              <span className="text-[14px]">棚卸を確定する ({totalChanged})</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── 確認ダイアログ ── */}
       {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-            <h3 className="text-[14px] font-black text-white mb-2">棚卸を確定しますか？</h3>
-            <p className="text-[11px] text-slate-400 mb-5">
-              <span className="text-amber-400 font-black">{totalChanged} 品目</span> の在庫数が更新され、棚卸ログに記録されます。この操作は元に戻せません。
-            </p>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setConfirmOpen(false)} className="px-5 py-2 rounded-lg text-[11px] font-black text-slate-400 hover:text-white transition-colors">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl">
+            <div className="p-8 text-center">
+              <div className="w-14 h-14 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-500 mx-auto mb-5">
+                <AlertTriangle size={28} />
+              </div>
+              <h3 className="text-[16px] font-black text-white mb-3">棚卸を確定しますか？</h3>
+              <p className="text-[12px] text-slate-500 leading-relaxed">
+                <span className="text-amber-400 font-bold">{totalChanged}件</span> の在庫データを更新し、棚卸ログに記録します。この操作は取消できません。
+              </p>
+            </div>
+            <div className="flex border-t border-slate-800">
+              <button
+                onClick={() => setConfirmOpen(false)}
+                className="flex-1 py-5 text-[12px] font-black text-slate-500 hover:text-white transition-colors border-r border-slate-800"
+              >
                 キャンセル
               </button>
-              <button onClick={handleSaveStocktaking} className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[11px] font-black transition-colors">
+              <button
+                onClick={handleSaveStocktaking}
+                className="flex-1 py-5 text-[12px] font-black text-amber-500 hover:bg-amber-500/5 transition-colors"
+              >
                 確定保存
               </button>
             </div>
