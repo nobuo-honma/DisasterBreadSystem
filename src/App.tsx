@@ -6,6 +6,8 @@
 import { useState } from 'react';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Dashboard from './components/Dashboard';
+// 【追加】Inventoryコンポーネントをインポート
+import Inventory from './components/Inventory/Inventory';
 import Orders from './components/orders/Orders';
 import Shipping from './components/orders/Shipping';
 import Receiving from './components/orders/Receiving';
@@ -23,6 +25,9 @@ export default function App() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard />;
+      // 【追加】inventoryタブが選択された時の処理
+      case 'inventory':
+        return <Inventory />;
       case 'orders':
         return <Orders />;
       case 'shipping':
