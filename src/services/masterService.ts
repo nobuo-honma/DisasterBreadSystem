@@ -1,72 +1,119 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { MProduct, MItem, MBom, MDestination, MUser } from '../types';
-
-// Mock implementation of Master Data Service
-const mockProducts: MProduct[] = [
-  { id: 'p1', product_code: 'PRD-001', product_name: 'Product A', unit_cs_to_p: 12, is_active: true },
-  { id: 'p2', product_code: 'PRD-002', product_name: 'Product B', unit_cs_to_p: 24, is_active: true },
-];
-
-const mockItems: MItem[] = [
-  { id: 'i1', item_code: 'ITM-001', item_name: 'Material X', category: 'Raw Material', unit: 'kg', safety_stock: 100, is_active: true },
-  { id: 'i2', item_code: 'ITM-002', item_name: 'Material Y', category: 'Packaging', unit: 'pcs', safety_stock: 500, is_active: true },
-];
-
-const mockDestinations: MDestination[] = [
-  { id: 'd1', dest_code: 'DST-001', dest_name: 'Customer A', dest_type: 'Customer', is_active: true },
-  { id: 'd2', dest_code: 'DST-002', dest_name: 'Supplier B', dest_type: 'Supplier', is_active: true },
-];
-
-const mockUsers: MUser[] = [
-  { id: 'u1', username: 'admin', email: 'admin@example.com', role: 'Admin', is_active: true },
-  { id: 'u2', username: 'user1', email: 'user1@example.com', role: 'User', is_active: true },
-];
+import { supabase } from '../lib/supabase/client';
+import { MProduct, MItem, MBom, MDestination } from '../types';
 
 export const masterService = {
-  // Products
+  // --- 製品マスタ ---
   async getProducts(): Promise<MProduct[]> {
-    return mockProducts;
+    const { data, error } = await supabase
+      .from('m_products')
+      .select('*')
+      .order('product_code');
+    if (error) throw error;
+    return data ?? [];
   },
+
   async saveProduct(product: Partial<MProduct>): Promise<void> {
-    console.log('Saving product', product);
+    if (product.id) {
+      const { error } = await supabase
+        .from('m_products')
+        .update(product)
+        .eq('id', product.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('m_products')
+        .insert(product);
+      if (error) throw error;
+    }
   },
 
-  // Items
+  // --- 品目マスタ ---
   async getItems(): Promise<MItem[]> {
-    return mockItems;
+    const { data, error } = await supabase
+      .from('m_items')
+      .select('*')
+      .order('item_code');
+    if (error) throw error;
+    return data ?? [];
   },
+
   async saveItem(item: Partial<MItem>): Promise<void> {
-    console.log('Saving item', item);
+    if (item.id) {
+      const { error } = await supabase
+        .from('m_items')
+        .update(item)
+        .eq('id', item.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('m_items')
+        .insert(item);
+      if (error) throw error;
+    }
   },
 
-  // BOM
-  async getBOM(productId: string): Promise<MBom[]> {
-    console.log('Fetching BOM for', productId);
-    return [
-      { id: 'b1', product_id: productId, product_code: 'PRD-001', item_id: 'i1', item_code: 'ITM-001', quantity: 0.5 },
-    ];
-  },
-  async saveBOM(productId: string, entries: Partial<MBom>[]): Promise<void> {
-    console.log('Saving BOM for', productId, entries);
+  // --- BOM ---
+  async getBOM(productCode: string): Promise<MBom[]> {
+    const { data, error } = await supabase
+      .from('m_bom')
+      .select('*')
+      .eq('product_code', productCode)
+      .order('item_code');
+    if (error) throw error;
+    return data ?? [];
   },
 
-  // Destinations
+  async saveBOM(productCode: string, entries: Partial<MBom>[]): Promise<void> {
+    // 既存BOMを削除して再登録（全置換方式）
+    const { error: delErr } = await supabase
+      .from('m_bom')
+      .delete()
+      .eq('product_code', productCode);
+    if (delErr) throw delErr;
+
+    if (entries.length > 0) {
+      const rows = entries.map(e => ({ ...e, product_code: productCode }));
+      const { error: insErr } = await supabase
+        .from('m_bom')
+        .insert(rows);
+      if (insErr) throw insErr;
+    }
+  },
+
+  // --- 出荷先マスタ ---
   async getDestinations(): Promise<MDestination[]> {
-    return mockDestinations;
-  },
-  async saveDestination(dest: Partial<MDestination>): Promise<void> {
-    console.log('Saving destination', dest);
+    const { data, error } = await supabase
+      .from('m_destinations')
+      .select('*')
+      .order('destination_code');
+    if (error) throw error;
+    return data ?? [];
   },
 
-  // Users
-  async getUsers(): Promise<MUser[]> {
-    return mockUsers;
+  async saveDestination(dest: Partial<MDestination>): Promise<void> {
+    if (dest.id) {
+      const { error } = await supabase
+        .from('m_destinations')
+        .update(dest)
+        .eq('id', dest.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('m_destinations')
+        .insert(dest);
+      if (error) throw error;
+    }
   },
-  async saveUser(user: Partial<MUser>): Promise<void> {
-    console.log('Saving user', user);
-  }
+
+  // --- ユーザー管理 (Supabase Auth管理 / 参照のみ) ---
+  // ユーザー管理はSupabase Auth側で行うため、
+  // このメソッドは現在スタブです。本番運用時はAuth Admin APIを使用してください。
+  async getUsers(): Promise<import('../types').MUser[]> {
+    console.warn('getUsers: ユーザー管理はSupabase Authで行ってください');
+    return [];
+  },
+
+  async saveUser(_user: Partial<import('../types').MUser>): Promise<void> {
+    console.warn('saveUser: ユーザー管理はSupabase Authで行ってください');
+  },
 };

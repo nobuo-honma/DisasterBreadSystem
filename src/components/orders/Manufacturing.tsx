@@ -320,7 +320,7 @@ function PlanCard({ entry, onStatusChange, onDragStart }: PlanCardProps) {
         {showPopover && (
           <StatusPopover
             current={plan.status}
-            onSelect={newStatus => onStatusChange({ ...entry, plan: { ...plan, status: newStatus } })}
+            onSelect={newStatus => onStatusChange({ ...entry, plan: { ...plan, status: newStatus as TMfgPlan['status'] } })}
             onClose={() => setShowPopover(false)}
           />
         )}
@@ -392,21 +392,19 @@ export default function Manufacturing() {
 
   const metrics = useMemo(() => {
     if (!selectedOrder || !currentProduct) return { totalWeight: 0, plannedWeight: 0, remainingWeight: 0, progress: 0 };
-    // Assuming 1 CS = unit_cs_to_p, and we need units_per_kg which is not in MProduct. Let's assume 1kg = 1 unit for now or add to type.
-    // For simplicity, let's use a fixed ratio if not available.
-    const unitsPerKg = 1;
-    const totalWeight = (selectedOrder.quantity_cs * currentProduct.unit_cs_to_p) / unitsPerKg;
+    const unitsPerKg = currentProduct.units_per_kg || 1;
+    const totalWeight = (selectedOrder.quantity_cs * currentProduct.units_per_cs) / unitsPerKg;
     const plannedWeight = plans.reduce((s, p) => s + (Number(p.amount_kg) || 0), 0);
     return { totalWeight, plannedWeight, remainingWeight: totalWeight - plannedWeight, progress: totalWeight > 0 ? Math.min((plannedWeight / totalWeight) * 100, 100) : 0 };
   }, [selectedOrder, currentProduct, plans]);
 
   const calcCs = useCallback((weight: number | string) => {
-    if (!currentProduct || !currentProduct.unit_cs_to_p) return 0;
-    const unitsPerKg = 1;
-    return Math.floor((Number(weight) * unitsPerKg) / currentProduct.unit_cs_to_p);
+    if (!currentProduct || !currentProduct.units_per_cs) return 0;
+    const unitsPerKg = currentProduct.units_per_kg || 1;
+    return Math.floor((Number(weight) * unitsPerKg) / currentProduct.units_per_cs);
   }, [currentProduct]);
 
-  const destName = useCallback((code: string) => destinations.find(d => d.dest_code === code)?.dest_name || code, [destinations]);
+  const destName = useCallback((code: string) => destinations.find(d => d.destination_code === code)?.destination_name || code, [destinations]);
   const flavor = (remarks: string) => remarks?.match(/味:([^|]+)/)?.[1]?.trim() || '通常';
   const orderStatus = (code: string): string | null => {
     const ps = allPlans[code]; if (!ps?.length) return null;
@@ -476,7 +474,6 @@ export default function Manufacturing() {
         expiry_date: input.expiry_date,
         stock_cs: input.stock_cs,
         stock_p: input.stock_p,
-        remarks: input.remarks,
       });
       addToast('success', `製品在庫に登録しました（${input.mfg_lot}）`);
     } catch { addToast('error', '製品在庫の登録に失敗しました'); }
@@ -639,7 +636,7 @@ export default function Manufacturing() {
                         <span className="text-[10px] font-mono text-slate-500">{Number(p.amount_kg) > 0 ? `${calcCs(p.amount_kg)}cs` : '—'}</span>
                       </div>
                       <select value={p.status}
-                        onChange={e => setPlans(prev => prev.map((x, j) => j === i ? { ...x, status: e.target.value } : x))}
+                        onChange={e => setPlans(prev => prev.map((x, j) => j === i ? { ...x, status: e.target.value as TMfgPlan['status'] } : x))}
                         className="col-span-2 bg-slate-950 border border-slate-800 px-3 py-2.5 rounded-xl text-xs outline-none focus:border-orange-600 text-slate-300">
                         <option>計画</option><option>製造中</option><option>完了</option>
                       </select>
