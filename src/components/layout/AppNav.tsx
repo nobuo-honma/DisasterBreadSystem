@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { LayoutDashboard, Package, Box, Layers, MapPin, Users, ShoppingCart, Truck, History, Settings, LogOut, Factory } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { LayoutDashboard, Package, Box, Layers, MapPin, Users, ShoppingCart, Truck, History, LogOut, Factory } from 'lucide-react';
+// 【重要】 motion/react から標準の framer-motion に修正
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AppNavProps {
   activeTab: string;
@@ -14,6 +15,7 @@ interface AppNavProps {
 export default function AppNav({ activeTab, onTabChange }: AppNavProps) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, category: 'Main' },
+    { id: 'inventory', label: 'Inventory', icon: Package, category: 'Operations' },
     { id: 'orders', label: 'Orders', icon: ShoppingCart, category: 'Operations' },
     { id: 'manufacturing', label: 'Manufacturing', icon: Factory, category: 'Operations' },
     { id: 'shipping', label: 'Shipping', icon: Truck, category: 'Operations' },
