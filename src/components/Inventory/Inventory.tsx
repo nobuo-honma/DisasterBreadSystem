@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { Package, Save, AlertTriangle, ArrowRightLeft } from 'lucide-react';
 
 // 【修正点】 motion/react から標準的な framer-motion に変更
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import { inventoryService } from '../../services/inventoryService';
 import { TItemStock, TProductStock } from '../../types';
@@ -36,8 +36,14 @@ export default function Inventory() {
     };
 
     const handleSaveStocktaking = async () => {
-        // In a real app, we'd send the adjustments to the server
-        await inventoryService.saveStocktaking(adjustments, {});
+        const payload = itemStocks
+            .filter(s => adjustments[s.id] !== undefined)
+            .map(s => ({
+                itemCode: s.item_code,
+                afterStock: adjustments[s.id],
+                remarks: `棚卸調整 ${new Date().toLocaleDateString('ja-JP')}`,
+            }));
+        await inventoryService.saveStocktaking(payload);
         alert('棚卸結果を保存しました');
         setIsStocktaking(false);
         setAdjustments({});
@@ -60,8 +66,8 @@ export default function Inventory() {
                     <button
                         onClick={() => setIsStocktaking(!isStocktaking)}
                         className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg ${isStocktaking
-                                ? 'bg-rose-600 text-white shadow-rose-900/20'
-                                : 'bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-600'
+                            ? 'bg-rose-600 text-white shadow-rose-900/20'
+                            : 'bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-600'
                             }`}
                     >
                         <ArrowRightLeft size={16} /> {isStocktaking ? 'Cancel Stocktaking' : 'Start Stocktaking'}

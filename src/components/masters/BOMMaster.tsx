@@ -12,6 +12,7 @@ export default function BOMMaster() {
     const [products, setProducts] = useState<MProduct[]>([]);
     const [items, setItems] = useState<MItem[]>([]);
     const [selectedProductId, setSelectedProductId] = useState<string>('');
+    const [selectedProductCode, setSelectedProductCode] = useState<string>('');
     const [bomEntries, setBomEntries] = useState<Partial<MBom>[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -28,23 +29,25 @@ export default function BOMMaster() {
         init();
     }, []);
 
-    const fetchBOM = async (productId: string) => {
-        setSelectedProductId(productId);
-        const data = await masterService.getBOM(productId);
+    const fetchBOM = async (product: MProduct) => {
+        setSelectedProductId(product.id);
+        setSelectedProductCode(product.product_code);
+        const data = await masterService.getBOM(product.product_code);
         setBomEntries(data);
     };
 
     const handleSaveBOM = async () => {
-        if (!selectedProductId) return;
-        const cleanEntries = bomEntries.filter(e => e.item_id && e.quantity && e.quantity > 0);
-        await masterService.saveBOM(selectedProductId, cleanEntries);
+        if (!selectedProductCode) return;
+        const cleanEntries = bomEntries.filter(e => e.item_code && e.usage_rate && e.usage_rate > 0);
+        await masterService.saveBOM(selectedProductCode, cleanEntries as MBom[]);
         alert('BOM設定を更新しました');
-        fetchBOM(selectedProductId);
+        const product = products.find(p => p.id === selectedProductId);
+        if (product) fetchBOM(product);
     };
 
     const addRow = () => {
-        if (!selectedProductId) return;
-        setBomEntries([...bomEntries, { product_id: selectedProductId, item_id: '', quantity: 0 }]);
+        if (!selectedProductCode) return;
+        setBomEntries([...bomEntries, { product_code: selectedProductCode, item_code: '', usage_rate: 0 }]);
     };
 
     if (loading) return <div className="p-10 text-center text-slate-500 font-black animate-pulse uppercase tracking-[0.3em] text-xs">Parsing Configuration Tree...</div>;
@@ -71,7 +74,7 @@ export default function BOMMaster() {
                             {products.map((p) => (
                                 <button
                                     key={p.id}
-                                    onClick={() => fetchBOM(p.id)}
+                                    onClick={() => fetchBOM(p)}
                                     className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 group ${selectedProductId === p.id
                                         ? 'bg-indigo-500/10 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.1)]'
                                         : 'bg-slate-950/50 border-slate-800 hover:border-slate-600'
@@ -125,17 +128,17 @@ export default function BOMMaster() {
                                             <tr key={index} className="group hover:bg-slate-800/10">
                                                 <td className="py-4 px-6">
                                                     <select
-                                                        value={entry.item_id}
+                                                        value={entry.item_code}
                                                         onChange={(e) => {
                                                             const newEntries = [...bomEntries];
-                                                            newEntries[index].item_id = e.target.value;
+                                                            newEntries[index].item_code = e.target.value;
                                                             setBomEntries(newEntries);
                                                         }}
                                                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-indigo-500"
                                                     >
                                                         <option value="">品目を選択してください</option>
                                                         {items.map(i => (
-                                                            <option key={i.id} value={i.id}>{i.item_code} : {i.item_name}</option>
+                                                            <option key={i.id} value={i.item_code}>{i.item_code} : {i.item_name}</option>
                                                         ))}
                                                     </select>
                                                 </td>
@@ -143,17 +146,17 @@ export default function BOMMaster() {
                                                     <input
                                                         type="number"
                                                         step="0.001"
-                                                        value={entry.quantity}
+                                                        value={entry.usage_rate}
                                                         onChange={(e) => {
                                                             const newEntries = [...bomEntries];
-                                                            newEntries[index].quantity = Number(e.target.value);
+                                                            newEntries[index].usage_rate = Number(e.target.value);
                                                             setBomEntries(newEntries);
                                                         }}
                                                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white text-right font-mono outline-none focus:border-indigo-500"
                                                     />
                                                 </td>
                                                 <td className="py-4 px-6 text-center text-[10px] font-bold text-slate-500">
-                                                    {items.find(i => i.id === entry.item_id)?.unit || '-'}
+                                                    {items.find(i => i.item_code === entry.item_code)?.unit || '-'}
                                                 </td>
                                                 <td className="py-4 px-6 text-center">
                                                     <button

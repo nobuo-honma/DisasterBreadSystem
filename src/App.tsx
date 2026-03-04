@@ -16,6 +16,7 @@ import ProductsMaster from './components/masters/ProductsMaster';
 import ItemsMaster from './components/masters/ItemsMaster';
 import BOMMaster from './components/masters/BOMMaster';
 import DestinationsMaster from './components/masters/DestinationsMaster';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import UsersMaster from './components/masters/UsersMaster';
 
 export default function App() {
@@ -53,7 +54,11 @@ export default function App() {
 
   return (
     <DashboardLayout activeTab={activeTab} onTabChange={setActiveTab}>
-      {renderContent()}
+      <div key={activeTab} className="contents">
+        <ErrorBoundary>
+          {renderContent()}
+        </ErrorBoundary>
+      </div>
     </DashboardLayout>
   );
 }

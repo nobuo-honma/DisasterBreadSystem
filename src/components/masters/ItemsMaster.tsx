@@ -45,7 +45,7 @@ export default function ItemsMaster() {
   const handleAddNew = () => {
     const newId = `new-${Date.now()}`;
     setEditingId(newId);
-    setEditForm({ id: newId, item_code: '', item_name: '', category: 'Raw Material', unit: 'kg', safety_stock: 0, is_active: true });
+    setEditForm({ id: newId, item_code: '', item_name: '', category: '原材料', unit: 'kg', min_stock: 0 });
   };
 
   const categories = ['All', ...new Set(items.map(i => i.category))];
@@ -66,7 +66,7 @@ export default function ItemsMaster() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl">
             <Filter size={14} className="text-slate-500" />
-            <select 
+            <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
               className="bg-transparent text-xs font-bold text-slate-300 outline-none"
@@ -91,7 +91,7 @@ export default function ItemsMaster() {
               <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Item Name</th>
               <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Category</th>
               <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest w-24 text-center">Unit</th>
-              <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Safety Stock</th>
+              <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">適正在庫</th>
               <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest w-32">Actions</th>
             </tr>
           </thead>
@@ -124,12 +124,14 @@ export default function ItemsMaster() {
                 </td>
                 <td className="py-4 px-6">
                   {editingId === i.id ? (
-                    <input
-                      type="text"
+                    <select
                       value={editForm.category}
-                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value as any })}
                       className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-blue-500 w-full"
-                    />
+                    >
+                      <option value="原材料">原材料</option>
+                      <option value="資材">資材</option>
+                    </select>
                   ) : (
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{i.category}</span>
                   )}
@@ -150,12 +152,12 @@ export default function ItemsMaster() {
                   {editingId === i.id ? (
                     <input
                       type="number"
-                      value={editForm.safety_stock}
-                      onChange={(e) => setEditForm({ ...editForm, safety_stock: Number(e.target.value) })}
+                      value={editForm.min_stock}
+                      onChange={(e) => setEditForm({ ...editForm, min_stock: Number(e.target.value) })}
                       className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white text-right outline-none focus:border-blue-500 w-24"
                     />
                   ) : (
-                    <span className="text-sm font-mono text-slate-400">{i.safety_stock}</span>
+                    <span className="text-sm font-mono text-slate-400">{i.min_stock}</span>
                   )}
                 </td>
                 <td className="py-4 px-6">

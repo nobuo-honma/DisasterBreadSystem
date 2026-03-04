@@ -12,6 +12,7 @@ export interface MProduct {
   units_per_kg: number;
   units_per_cs: number;
   product_category: string;
+  is_active: boolean;
   remarks?: string;
   created_at?: string;
   updated_at?: string;
@@ -24,6 +25,7 @@ export interface MItem {
   category: '原材料' | '資材';
   unit: string;
   min_stock: number;
+  is_active?: boolean;
   remarks?: string;
   created_at?: string;
   updated_at?: string;
@@ -48,9 +50,9 @@ export interface MDestination {
   zip_code?: string;
   address?: string;
   tel?: string;
-  fax?: string;
   contact_person?: string;
   remarks?: string;
+  is_active?: boolean;
   created_at?: string;
   updated_at?: string;
 }

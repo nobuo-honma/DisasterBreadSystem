@@ -44,7 +44,16 @@ export default function ProductsMaster() {
   const handleAddNew = () => {
     const newId = `new-${Date.now()}`;
     setEditingId(newId);
-    setEditForm({ id: newId, product_code: '', product_name: '', unit_cs_to_p: 1, is_active: true });
+    setEditForm({
+      id: newId,
+      product_code: '',
+      product_name: '',
+      mfg_type: '',
+      units_per_kg: 0,
+      units_per_cs: 1,
+      product_category: '',
+      is_active: true,
+    });
   };
 
   if (loading) return <div className="p-10 text-center text-slate-500 font-black animate-pulse uppercase tracking-[0.3em] text-xs">Accessing Product Repository...</div>;
@@ -73,7 +82,8 @@ export default function ProductsMaster() {
             <tr className="bg-slate-950/50 border-b border-slate-800">
               <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Code</th>
               <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Product Name</th>
-              <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Unit (CS/P)</th>
+              <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Type / Cat</th>
+              <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Unit (KG/CS)</th>
               <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Status</th>
               <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest w-32">Actions</th>
             </tr>
@@ -105,16 +115,58 @@ export default function ProductsMaster() {
                     <span className="text-sm font-bold text-slate-200">{p.product_name}</span>
                   )}
                 </td>
+                <td className="py-4 px-6">
+                  {editingId === p.id ? (
+                    <div className="flex gap-1">
+                      <input
+                        type="text"
+                        value={editForm.mfg_type}
+                        onChange={(e) => setEditForm({ ...editForm, mfg_type: e.target.value })}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[10px] text-white outline-none focus:border-emerald-500 w-16"
+                        placeholder="種別"
+                      />
+                      <input
+                        type="text"
+                        value={editForm.product_category}
+                        onChange={(e) => setEditForm({ ...editForm, product_category: e.target.value })}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[10px] text-white outline-none focus:border-emerald-500 w-16"
+                        placeholder="カテゴリ"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{p.mfg_type}</span>
+                      <span className="text-[9px] font-bold text-slate-600 italic">{p.product_category}</span>
+                    </div>
+                  )}
+                </td>
                 <td className="py-4 px-6 text-right">
                   {editingId === p.id ? (
-                    <input
-                      type="number"
-                      value={editForm.unit_cs_to_p}
-                      onChange={(e) => setEditForm({ ...editForm, unit_cs_to_p: Number(e.target.value) })}
-                      className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white text-right outline-none focus:border-emerald-500 w-24"
-                    />
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-end gap-1">
+                        <span className="text-[8px] text-slate-600">KG:</span>
+                        <input
+                          type="number"
+                          value={editForm.units_per_kg}
+                          onChange={(e) => setEditForm({ ...editForm, units_per_kg: Number(e.target.value) })}
+                          className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white text-right outline-none focus:border-emerald-500 w-16"
+                        />
+                      </div>
+                      <div className="flex items-center justify-end gap-1">
+                        <span className="text-[8px] text-slate-600">CS:</span>
+                        <input
+                          type="number"
+                          value={editForm.units_per_cs}
+                          onChange={(e) => setEditForm({ ...editForm, units_per_cs: Number(e.target.value) })}
+                          className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-white text-right outline-none focus:border-emerald-500 w-16"
+                        />
+                      </div>
+                    </div>
                   ) : (
-                    <span className="text-sm font-mono text-slate-400">{p.unit_cs_to_p}</span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs font-mono text-slate-400">{p.units_per_kg} p/kg</span>
+                      <span className="text-xs font-mono text-slate-500">{p.units_per_cs} p/cs</span>
+                    </div>
                   )}
                 </td>
                 <td className="py-4 px-6 text-center">

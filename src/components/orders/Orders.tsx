@@ -202,15 +202,15 @@ export default function Orders() {
     const kw = destSearch.trim().toLowerCase();
     if (!kw) return destinations;
     return destinations.filter(d =>
-      (d.dest_name || '').toLowerCase().includes(kw) ||
-      (d.dest_code || '').toLowerCase().includes(kw)
+      (d.destination_name || '').toLowerCase().includes(kw) ||
+      (d.destination_code || '').toLowerCase().includes(kw)
     );
   }, [destinations, destSearch]);
 
   const selectedDestName = useMemo(
     () =>
-      destinations.find(d => d.dest_code === orderHeader.destination_code)
-        ?.dest_name ?? '出荷先を検索・選択',
+      destinations.find(d => d.destination_code === orderHeader.destination_code)
+        ?.destination_name ?? '出荷先を検索・選択',
     [orderHeader.destination_code, destinations]
   );
 
@@ -282,8 +282,20 @@ export default function Orders() {
   }, []);
 
   const handleDetailFlavorChange = useCallback(
-    (id: string, flavorType: string, productName: string) => {
+    async (id: string, flavorType: string, productName: string) => {
       const flavorObj = getFlavorsForProductName(productName).find(x => x.flavor === flavorType);
+      if (flavorObj) {
+        try {
+          const bom = await masterService.getBOM(flavorObj.code);
+          setBomMaster(prev => {
+            // 既存のBOM（別製品）と重複しないようにマージ
+            const filtered = prev.filter(b => b.product_code !== flavorObj.code);
+            return [...filtered, ...bom];
+          });
+        } catch {
+          console.error('BOM取得失敗');
+        }
+      }
       setOrderDetails(prev =>
         prev.map(d =>
           d.id === id
@@ -381,7 +393,46 @@ export default function Orders() {
                 <ChevronDown size={18} className={`text-slate-600 transition-transform duration-200 ${isDestOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* ... (Destination Dropdownの内包要素は変更なし) ... */}
+              {isDestOpen && (
+                <div
+                  role="listbox"
+                  aria-labelledby="dest-label"
+                  className="absolute z-50 top-full left-0 mt-2 w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden"
+                >
+                  <div className="p-3 border-b border-slate-800">
+                    <div className="relative">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <input
+                        type="text"
+                        value={destSearch}
+                        onChange={e => setDestSearch(e.target.value)}
+                        placeholder="出荷先を検索..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-sm text-white outline-none focus:border-orange-500"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <ul className="max-h-48 overflow-y-auto">
+                    {filteredDestinations.map(d => (
+                      <li key={d.destination_code}>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={orderHeader.destination_code === d.destination_code}
+                          onClick={() => handleSelectDestination(d.destination_code)}
+                          className="w-full text-left px-4 py-3 text-sm hover:bg-slate-800 transition-colors flex justify-between items-center"
+                        >
+                          <span className="font-bold text-white">{d.destination_name}</span>
+                          <span className="text-xs font-mono text-slate-500">{d.destination_code}</span>
+                        </button>
+                      </li>
+                    ))}
+                    {filteredDestinations.length === 0 && (
+                      <li className="px-4 py-6 text-center text-slate-500 text-sm">該当なし</li>
+                    )}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <div>
@@ -396,7 +447,6 @@ export default function Orders() {
             </div>
           </section>
 
-          {/* セクションの角丸を 3xl (24px) に統一 */}
           <section aria-label="受注明細" className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
             <div className="p-6 bg-slate-800/20 border-b border-slate-800 flex justify-between items-center">
               <span className="text-[10px] font-black text-slate-500 tracking-widest flex items-center gap-2">
@@ -406,10 +456,35 @@ export default function Orders() {
                 <Plus size={20} />
               </button>
             </div>
-            {/* ... (Table構造は変更なし) ... */}
+
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-950/50 border-b border-slate-800">
+                  <th className="py-4 px-8 text-[10px] font-black text-slate-500 uppercase tracking-widest">製品名</th>
+                  <th className="py-4 px-8 text-[10px] font-black text-slate-500 uppercase tracking-widest">種類（味）</th>
+                  <th className="py-4 px-8 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right w-36">数量（CS）</th>
+                  <th className="py-4 px-8 w-16"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {orderDetails.map(detail => (
+                  <OrderDetailRow
+                    key={detail.id}
+                    detail={detail}
+                    uniqueProductNames={uniqueProductNames}
+                    flavors={detail.product_name ? getFlavorsForProductName(detail.product_name) : []}
+                    onProductChange={handleDetailProductChange}
+                    onFlavorChange={handleDetailFlavorChange}
+                    onQuantityChange={handleDetailQuantityChange}
+                    onRemove={handleRemoveDetail}
+                    canRemove={orderDetails.length > 1}
+                  />
+                ))}
+              </tbody>
+            </table>
           </section>
 
-          {/* 【修正箇所】 指摘された角丸を rounded-4xl に変更 */}
+          {/* 【修正箇所】 指定の角丸（2rem）に調整 */}
           <button
             type="button"
             onClick={handleSaveOrder}

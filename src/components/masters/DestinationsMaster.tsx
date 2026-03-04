@@ -13,12 +13,11 @@ export default function DestinationsMaster() {
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<MDestination>>({
-        dest_code: '',
-        dest_name: '',
-        dest_type: '出荷先',
-        postal_code: '',
+        destination_code: '',
+        destination_name: '',
+        zip_code: '',
         address: '',
-        phone: '',
+        tel: '',
         contact_person: '',
         is_active: true,
     });
@@ -35,16 +34,15 @@ export default function DestinationsMaster() {
     }, []);
 
     const handleSave = async () => {
-        if (!formData.dest_code || !formData.dest_name) return;
+        if (!formData.destination_code || !formData.destination_name) return;
         await masterService.saveDestination({ ...formData, id: editingId || undefined });
         setEditingId(null);
         setFormData({
-            dest_code: '',
-            dest_name: '',
-            dest_type: '出荷先',
-            postal_code: '',
+            destination_code: '',
+            destination_name: '',
+            zip_code: '',
             address: '',
-            phone: '',
+            tel: '',
             contact_person: '',
             is_active: true
         });
@@ -78,27 +76,15 @@ export default function DestinationsMaster() {
 
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
+                                <div className="space-y-1 col-span-2">
                                     <label className="text-[10px] font-black text-slate-500 uppercase">取引先コード</label>
                                     <input
                                         type="text"
-                                        value={formData.dest_code}
-                                        onChange={(e) => setFormData({ ...formData, dest_code: e.target.value })}
+                                        value={formData.destination_code}
+                                        onChange={(e) => setFormData({ ...formData, destination_code: e.target.value })}
                                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-white focus:border-orange-500 outline-none transition-all font-mono"
                                         placeholder="D-000"
                                     />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-500 uppercase">区分</label>
-                                    <select
-                                        value={formData.dest_type}
-                                        onChange={(e) => setFormData({ ...formData, dest_type: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white outline-none appearance-none"
-                                    >
-                                        <option value="出荷先">出荷先</option>
-                                        <option value="仕入先">仕入先</option>
-                                        <option value="配送">配送業者</option>
-                                    </select>
                                 </div>
                             </div>
 
@@ -106,8 +92,8 @@ export default function DestinationsMaster() {
                                 <label className="text-[10px] font-black text-slate-500 uppercase">取引先名称</label>
                                 <input
                                     type="text"
-                                    value={formData.dest_name}
-                                    onChange={(e) => setFormData({ ...formData, dest_name: e.target.value })}
+                                    value={formData.destination_name}
+                                    onChange={(e) => setFormData({ ...formData, destination_name: e.target.value })}
                                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold text-white focus:border-orange-500 outline-none transition-all"
                                 />
                             </div>
@@ -117,8 +103,8 @@ export default function DestinationsMaster() {
                                     <label className="text-[10px] font-black text-slate-500 uppercase italic">〒</label>
                                     <input
                                         type="text"
-                                        value={formData.postal_code}
-                                        onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                                        value={formData.zip_code}
+                                        onChange={(e) => setFormData({ ...formData, zip_code: e.target.value })}
                                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white outline-none"
                                     />
                                 </div>
@@ -134,12 +120,12 @@ export default function DestinationsMaster() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
+                                <div className="space-y-1 italic">
                                     <label className="text-[10px] font-black text-slate-500 uppercase">電話番号</label>
                                     <input
                                         type="text"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        value={formData.tel}
+                                        onChange={(e) => setFormData({ ...formData, tel: e.target.value })}
                                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white outline-none"
                                     />
                                 </div>
@@ -152,6 +138,16 @@ export default function DestinationsMaster() {
                                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white outline-none"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-950/50 border border-slate-800">
+                                <label className="text-[10px] font-black text-slate-500 uppercase grow">有効/無効</label>
+                                <button
+                                    onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+                                    className={`w-12 h-6 rounded-full p-1 transition-all ${formData.is_active ? 'bg-orange-600' : 'bg-slate-800'}`}
+                                >
+                                    <div className={`w-4 h-4 bg-white rounded-full transition-all ${formData.is_active ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </button>
                             </div>
 
                             <button
@@ -180,9 +176,10 @@ export default function DestinationsMaster() {
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="bg-slate-800/50 border-b border-slate-800">
-                                    <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type / Code</th>
+                                    <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Code</th>
                                     <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Name / Contact</th>
                                     <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Location Info</th>
+                                    <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
                                     <th className="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Action</th>
                                 </tr>
                             </thead>
@@ -190,16 +187,10 @@ export default function DestinationsMaster() {
                                 {destinations.map((d) => (
                                     <tr key={d.id} className="group hover:bg-slate-800/20 transition-all">
                                         <td className="py-6 px-6">
-                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${d.dest_type === '出荷先' ? 'border-blue-500/30 text-blue-400 bg-blue-500/5' :
-                                                d.dest_type === '仕入先' ? 'border-orange-500/30 text-orange-400 bg-orange-500/5' :
-                                                    'border-slate-500/30 text-slate-400 bg-slate-500/5'
-                                                }`}>
-                                                {d.dest_type}
-                                            </span>
-                                            <div className="text-xs font-mono font-black text-slate-400 mt-2">{d.dest_code}</div>
+                                            <div className="text-xs font-mono font-black text-orange-400">{d.destination_code}</div>
                                         </td>
                                         <td className="py-6 px-6">
-                                            <div className="text-sm font-black text-white group-hover:text-orange-400 transition-colors">{d.dest_name}</div>
+                                            <div className="text-sm font-black text-white group-hover:text-orange-400 transition-colors">{d.destination_name}</div>
                                             <div className="flex items-center gap-2 mt-1 text-slate-500">
                                                 <User size={10} className="text-slate-600" />
                                                 <span className="text-[10px] font-bold">{d.contact_person || 'N/A'}</span>
@@ -212,8 +203,13 @@ export default function DestinationsMaster() {
                                             </div>
                                             <div className="flex items-center gap-2 mt-1 text-slate-500">
                                                 <Phone size={10} className="text-slate-600" />
-                                                <span className="text-[10px] font-mono">{d.phone || '-'}</span>
+                                                <span className="text-[10px] font-mono">{d.tel || '-'}</span>
                                             </div>
+                                        </td>
+                                        <td className="py-6 px-6 text-center">
+                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${d.is_active !== false ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5' : 'border-slate-500/30 text-slate-400 bg-slate-500/5'}`}>
+                                                {d.is_active !== false ? 'ACTIVE' : 'INACTIVE'}
+                                            </span>
                                         </td>
                                         <td className="py-6 px-6 text-center">
                                             <button

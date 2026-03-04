@@ -29,11 +29,9 @@ export const inventoryService = {
   },
 
   async saveStocktaking(
-    adjustments: { itemCode: string; afterStock: number; remarks: string }[],
-    _productAdjustments?: unknown
+    adjustments: { itemCode: string; afterStock: number; remarks: string }[]
   ): Promise<void> {
     for (const adj of adjustments) {
-      // 現在在庫を取得
       const { data: current } = await supabase
         .from('t_item_stock')
         .select('actual_stock')
@@ -41,15 +39,14 @@ export const inventoryService = {
         .single();
 
       const beforeStock = current?.actual_stock ?? 0;
+      if (beforeStock === adj.afterStock) continue; // 変更なしはスキップ
 
-      // 在庫を更新
       const { error: stockErr } = await supabase
         .from('t_item_stock')
         .update({ actual_stock: adj.afterStock, updated_at: new Date().toISOString() })
         .eq('item_code', adj.itemCode);
       if (stockErr) throw stockErr;
 
-      // 棚卸ログを記録
       const { error: logErr } = await supabase
         .from('t_stocktaking_log')
         .insert({

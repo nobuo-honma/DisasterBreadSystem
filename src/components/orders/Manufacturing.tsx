@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useState, useMemo, useCallback, useRef, DragEvent, Key } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef, DragEvent, Key } from 'react';
 import {
   CheckCircle2, Package, Trash2, Printer, Loader2,
   Gauge, MessageSquare, MapPin, Plus, AlertTriangle,
@@ -285,7 +285,7 @@ interface PlanCardProps {
   key?: Key;
   entry: CalendarEntry;
   onStatusChange: (entry: CalendarEntry) => void;
-  onDragStart: (e: DragEvent, entry: CalendarEntry) => void;
+  onDragStart: (e: React.DragEvent<HTMLDivElement>, entry: CalendarEntry) => void;
 }
 
 function PlanCard({ entry, onStatusChange, onDragStart }: PlanCardProps) {
@@ -382,10 +382,25 @@ export default function Manufacturing() {
     })();
   }, [addToast]);
 
+  const generatePlanCode = (orderCode: string, index: number): string => {
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    return `PLN-${orderCode}-${date}-${String(index + 1).padStart(2, '0')}`;
+  };
+
   useEffect(() => {
     if (!selectedOrder) { setPlans([]); return; }
     const ex = allPlans[selectedOrder.order_code];
-    setPlans(ex?.length ? ex : [{ id: '', plan_code: '', order_code: selectedOrder.order_code, product_code: selectedOrder.product_code, scheduled_date: selectedOrder.request_delivery_date, amount_kg: 0, amount_cs: 0, status: '計画', remarks: '' }]);
+    setPlans(ex?.length ? ex : [{
+      id: '',
+      plan_code: generatePlanCode(selectedOrder.order_code, 0),
+      order_code: selectedOrder.order_code,
+      product_code: selectedOrder.product_code,
+      scheduled_date: selectedOrder.request_delivery_date,
+      amount_kg: 0,
+      amount_cs: 0,
+      status: '計画',
+      remarks: ''
+    }]);
   }, [selectedOrder, allPlans]);
 
   const currentProduct = useMemo(() => products.find(p => p.product_code === selectedOrder?.product_code), [products, selectedOrder]);
@@ -426,6 +441,13 @@ export default function Manufacturing() {
 
   const handleStatusChange = useCallback(async (entry: CalendarEntry) => {
     const { order, plan, planIndex } = entry;
+
+    // 未保存プランへのステータス変更をブロック
+    if (!plan.id) {
+      addToast('warning', '先にDB保存してからステータスを変更してください');
+      return;
+    }
+
     const newStatus = plan.status;
     setAllPlans(prev => {
       const arr = [...(prev[order.order_code] ?? [])];
@@ -441,12 +463,12 @@ export default function Manufacturing() {
     }
   }, [addToast]);
 
-  const handleDragStart = useCallback((e: DragEvent, entry: CalendarEntry) => {
+  const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>, entry: CalendarEntry) => {
     setDragging(entry);
     e.dataTransfer.effectAllowed = 'move';
   }, []);
 
-  const handleDrop = useCallback(async (e: DragEvent, targetDate: string) => {
+  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>, targetDate: string) => {
     e.preventDefault();
     setDragOver(null);
     if (!dragging || dragging.plan.scheduled_date === targetDate) return;
@@ -649,7 +671,17 @@ export default function Manufacturing() {
                       </button>
                     </div>
                   ))}
-                  <button onClick={() => setPlans(prev => [...prev, { id: '', plan_code: '', order_code: selectedOrder.order_code, product_code: selectedOrder.product_code, scheduled_date: selectedOrder.request_delivery_date, amount_kg: 0, amount_cs: 0, status: '計画', remarks: '' }])}
+                  <button onClick={() => setPlans(prev => [...prev, {
+                    id: '',
+                    plan_code: generatePlanCode(selectedOrder.order_code, prev.length),
+                    order_code: selectedOrder.order_code,
+                    product_code: selectedOrder.product_code,
+                    scheduled_date: selectedOrder.request_delivery_date,
+                    amount_kg: 0,
+                    amount_cs: 0,
+                    status: '計画',
+                    remarks: ''
+                  }])}
                     className="w-full py-4 border-2 border-dashed border-slate-800 rounded-2xl text-[10px] font-black text-slate-600 hover:bg-slate-900/40 hover:text-slate-400 transition-all flex items-center justify-center gap-2">
                     <Plus size={14} /> 計画行を追加
                   </button>

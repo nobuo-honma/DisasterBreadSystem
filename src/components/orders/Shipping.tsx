@@ -33,12 +33,12 @@ export default function Shipping() {
     const stocks = await inventoryService.getProductStocks();
     const relevantStocks = stocks.filter(s => s.product_code === order.product_code);
     setProductStocks(relevantStocks);
-    
+
     // Auto-allocate based on FIFO (expiry date)
     const sortedStocks = [...relevantStocks].sort((a, b) => a.expiry_date.localeCompare(b.expiry_date));
     let remaining = order.quantity_cs;
     const newAllocations: Record<string, number> = {};
-    
+
     for (const stock of sortedStocks) {
       if (remaining <= 0) break;
       const allocate = Math.min(remaining, stock.stock_cs);
@@ -56,8 +56,15 @@ export default function Shipping() {
     if (totalAllocated < selectedOrder.quantity_cs) {
       if (!confirm('在庫が不足していますが、出荷を確定しますか？')) return;
     }
-    
-    await inventoryService.confirmShipping(selectedOrder, allocations, shippingDate);
+
+    const lotQuantities = productStocks
+      .filter(s => (allocations[s.id] ?? 0) > 0)
+      .map(s => ({
+        mfg_lot: s.mfg_lot,
+        quantity_cs: allocations[s.id] ?? 0,
+        quantity_p: 0,
+      }));
+    await inventoryService.confirmShipping(selectedOrder, lotQuantities, shippingDate);
     alert('出荷を確定しました');
     setSelectedOrder(null);
     fetchPendingOrders();
@@ -87,7 +94,7 @@ export default function Shipping() {
               </h2>
               <span className="text-[10px] font-bold text-slate-500 bg-slate-800 px-2 py-1 rounded">{pendingOrders.length} ORDERS</span>
             </div>
-            
+
             <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
               {pendingOrders.map((order) => (
                 <button
@@ -133,7 +140,7 @@ export default function Shipping() {
                   <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
                     <Package size={14} className="text-amber-500" /> Inventory Allocation (FIFO)
                   </div>
-                  
+
                   <div className="bg-slate-950/50 border border-slate-800 rounded-2xl overflow-hidden">
                     <table className="w-full text-left">
                       <thead>
@@ -178,7 +185,7 @@ export default function Shipping() {
                       />
                     </div>
                   </div>
-                  
+
                   <button
                     onClick={handleConfirmShipping}
                     className="w-full md:w-auto bg-amber-600 hover:bg-amber-500 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-900/20 transition-all flex items-center justify-center gap-3 group"
