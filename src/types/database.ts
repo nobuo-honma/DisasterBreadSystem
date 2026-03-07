@@ -1,5 +1,13 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
+/**
+ * マスターデータ定義 (M_)
+ */
 export interface MProduct {
   id: string;
   product_code: string;
@@ -51,6 +59,9 @@ export interface MDestination {
   updated_at: string;
 }
 
+/**
+ * トランザクションデータ定義 (T_)
+ */
 export type OrderStatus = '受注済' | '製造中' | '完了' | '出荷済';
 
 export interface TOrder {
@@ -147,4 +158,65 @@ export interface TStocktakingLog {
   difference: number;
   remarks: string;
   adjusted_at: string;
+}
+
+/**
+ * Supabase Client 用の Database 型定義 (追加分)
+ * これにより supabase.from('table_name') の結果に自動で型がつきます。
+ */
+export interface Database {
+  public: {
+    Tables: {
+      m_products: {
+        Row: MProduct;
+        Insert: Partial<Omit<MProduct, 'id' | 'created_at'>>;
+        Update: Partial<MProduct>;
+      };
+      m_items: {
+        Row: MItem;
+        Insert: Partial<Omit<MItem, 'id' | 'created_at'>>;
+        Update: Partial<MItem>;
+      };
+      m_boms: {
+        Row: MBom;
+        Insert: Partial<Omit<MBom, 'id' | 'created_at'>>;
+        Update: Partial<MBom>;
+      };
+      m_destinations: {
+        Row: MDestination;
+        Insert: Partial<Omit<MDestination, 'id' | 'created_at'>>;
+        Update: Partial<MDestination>;
+      };
+      t_orders: {
+        Row: TOrder;
+        Insert: Partial<Omit<TOrder, 'id' | 'created_at'>>;
+        Update: Partial<TOrder>;
+      };
+      t_mfg_plans: {
+        Row: TMfgPlan;
+        Insert: Partial<Omit<TMfgPlan, 'id' | 'created_at'>>;
+        Update: Partial<TMfgPlan>;
+      };
+      t_product_stocks: {
+        Row: TProductStock;
+        Insert: Partial<Omit<TProductStock, 'id' | 'created_at'>>;
+        Update: Partial<TProductStock>;
+      };
+      t_item_stocks: {
+        Row: TItemStock;
+        Insert: Partial<TItemStock>;
+        Update: Partial<TItemStock>;
+      };
+      t_receivings: {
+        Row: TReceiving;
+        Insert: Partial<Omit<TReceiving, 'id' | 'created_at'>>;
+        Update: Partial<TReceiving>;
+      };
+      t_shippings: {
+        Row: TShipping;
+        Insert: Partial<Omit<TShipping, 'id' | 'created_at'>>;
+        Update: Partial<TShipping>;
+      };
+    };
+  };
 }
